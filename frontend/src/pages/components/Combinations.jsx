@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/Navbar_Login";
 import PrimaryButton from "../components/PrimaryButton";
 
 const fadeUp = {
@@ -16,11 +16,437 @@ const fadeUp = {
   }),
 };
 
+
+
+
+
+function GenerateModal({
+  open,
+  onClose,
+  onGenerate,
+  itemsCount,
+  itemsPreview,
+  defaultK = 2,
+  defaultWeightStep = 1,
+  generating,
+
+  // NEW:
+  results,          // array of combinations from backend
+  generatedAt,      // optional string timestamp
+  onResetResults,   // clears results so modal returns to input mode
+}) {
+  const [k, setK] = useState(defaultK);
+  const [weightStep, setWeightStep] = useState(defaultWeightStep);
+  const [err, setErr] = useState("");
+
+  // Reset inputs when opened (only when NOT showing results)
+  useEffect(() => {
+    if (open && (!results || results.length === 0)) {
+      setK(defaultK);
+      setWeightStep(defaultWeightStep);
+      setErr("");
+    }
+  }, [open, defaultK, defaultWeightStep, results]);
+
+  const validate = (nextK) => {
+    if (!Number.isFinite(nextK) || !Number.isInteger(nextK)) return "Please enter a whole number.";
+    if (nextK < 1) return "K must be at least 1.";
+    if (nextK > itemsCount) return `K cannot be greater than your item count (${itemsCount}).`;
+    return "";
+  };
+
+  const onChangeK = (val) => {
+    const next = Number(val);
+    setK(next);
+    setErr(validate(next));
+  };
+
+  const onClickGenerate = () => {
+    const e = validate(k);
+    setErr(e);
+    if (e) return;
+    onGenerate({ size: k, weight_step: weightStep });
+  };
+
+  if (!open) return null;
+
+  const showResults = Array.isArray(results) && results.length > 0;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        background: "rgba(0,0,0,0.55)",
+        backdropFilter: "blur(6px)",
+        display: "grid",
+        placeItems: "center",
+        padding: 14,
+      }}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) {
+          // if results view, closing should also reset (optional)
+          onClose();
+        }
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 18, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 18, scale: 0.98 }}
+        transition={{ duration: 0.22, ease: [0.215, 0.61, 0.355, 1] }}
+        style={{
+          width: "min(920px, 100%)",
+          borderRadius: 22,
+          background: "rgba(12,14,20,0.82)",
+          border: "1px solid rgba(255,255,255,0.10)",
+          boxShadow: "0 22px 80px rgba(0,0,0,0.55)",
+          overflow: "hidden",
+          maxHeight: "min(86vh, 880px)",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {/* HEADER */}
+        <div style={{ padding: "18px 18px 0 18px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <div>
+              <div style={{ fontWeight: 950, fontSize: 18 }}>
+                {showResults ? "Generated combinations" : "Generate combinations"}
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.60)", fontSize: 13, marginTop: 6, lineHeight: 1.5 }}>
+                {showResults ? (
+                  <>
+                    Generated <strong>{results.length}</strong> combinations
+                    {generatedAt ? <> • <span style={{ opacity: 0.9 }}>{generatedAt}</span></> : null}
+                  </>
+                ) : (
+                  <>
+                    You added <strong>{itemsCount}</strong> items. Choose how many elements should be in each subset (K).
+                  </>
+                )}
+              </div>
+            </div>
+
+            <button
+              className="pill"
+              onClick={() => {
+                // optional: if results showing, reset when closing
+                onResetResults?.();
+                onClose();
+              }}
+              style={{
+                padding: "10px 12px",
+                borderRadius: 12,
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.10)",
+                color: "white",
+                cursor: "pointer",
+                fontWeight: 900,
+              }}
+            >
+              Close
+            </button>
+          </div>
+
+          {!showResults && (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
+              <div
+                className="pill"
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: 999,
+                  background: "rgba(106,217,255,0.12)",
+                  border: "1px solid rgba(106,217,255,0.30)",
+                  color: "rgba(255,255,255,0.90)",
+                  fontSize: 12,
+                  fontWeight: 900,
+                }}
+              >
+                Items: {itemsCount}
+              </div>
+              <div
+                className="pill"
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  color: "rgba(255,255,255,0.85)",
+                  fontSize: 12,
+                  fontWeight: 900,
+                }}
+              >
+                Valid K: 1–{itemsCount}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* BODY */}
+        <div style={{ padding: 18, display: "grid", gap: 14, overflow: "auto" }}>
+          {/* Preview / context */}
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 16,
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
+            <div style={{ fontWeight: 900, fontSize: 13, marginBottom: 8 }}>
+              {showResults ? "Input items" : "Preview"}
+            </div>
+            <div style={{ color: "rgba(255,255,255,0.70)", fontSize: 13, lineHeight: 1.6 }}>
+              {itemsPreview}
+            </div>
+          </div>
+
+          {!showResults ? (
+            // INPUT VIEW
+            <div style={{ display: "grid", gap: 10 }}>
+              <div style={{ display: "grid", gap: 6 }}>
+                <div style={{ fontWeight: 900, fontSize: 13 }}>How many elements per subset? (K)</div>
+                <input
+                  type="number"
+                  min={1}
+                  max={itemsCount}
+                  value={Number.isFinite(k) ? k : ""}
+                  onChange={(e) => onChangeK(e.target.value)}
+                  className="pill"
+                  style={{
+                    padding: "12px",
+                    borderRadius: 14,
+                    background: "rgba(255,255,255,0.05)",
+                    border: err ? "1px solid rgba(255,70,90,0.35)" : "1px solid rgba(255,255,255,0.12)",
+                    color: "white",
+                  }}
+                  placeholder={`Enter a number (1–${itemsCount})`}
+                />
+                {err ? (
+                  <div style={{ color: "rgba(255,120,130,0.95)", fontSize: 12, fontWeight: 800 }}>
+                    {err}
+                  </div>
+                ) : (
+                  <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>
+                    Example: If K=3 and you have 5 items, you’ll get all 3-item combinations.
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: "grid", gap: 6 }}>
+                <div style={{ fontWeight: 900, fontSize: 13 }}>Weight step (optional)</div>
+                <input
+                  type="number"
+                  min={1}
+                  value={Number.isFinite(weightStep) ? weightStep : ""}
+                  onChange={(e) => setWeightStep(Number(e.target.value))}
+                  className="pill"
+                  style={{
+                    padding: "12px",
+                    borderRadius: 14,
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    color: "white",
+                  }}
+                  placeholder="1"
+                />
+              </div>
+            </div>
+          ) : (
+            // RESULTS VIEW
+            <div
+              style={{
+                padding: 12,
+                borderRadius: 16,
+                background: "rgba(0,0,0,0.25)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              <div style={{ fontWeight: 900, fontSize: 13, marginBottom: 10 }}>
+                Results
+              </div>
+
+              <div style={{ display: "grid", gap: 8 }}>
+                {results.slice(0, 200).map((r, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 10,
+                      padding: "10px 12px",
+                      borderRadius: 12,
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.07)",
+                    }}
+                  >
+                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.9)", fontWeight: 800 }}>
+                      #{r.compound_number ?? idx + 1}
+                    </div>
+                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", flex: 1, textAlign: "right" }}>
+                      {(r.materials || []).join(" • ")}
+                    </div>
+                  </div>
+                ))}
+
+                {results.length > 200 && (
+                  <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, padding: "6px 4px" }}>
+                    Showing first 200 results. (You can add pagination/download next.)
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* FOOTER ACTIONS */}
+        <div
+          style={{
+            padding: 18,
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+            display: "flex",
+            gap: 10,
+            justifyContent: "flex-end",
+            flexWrap: "wrap",
+          }}
+        >
+          {!showResults ? (
+            <>
+              <button
+                type="button"
+                className="pill"
+                onClick={onClose}
+                style={{
+                  padding: "12px 14px",
+                  borderRadius: 12,
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  color: "white",
+                  cursor: "pointer",
+                  fontWeight: 900,
+                  minWidth: 110,
+                }}
+              >
+                Back
+              </button>
+
+              <button
+                type="button"
+                className="pill"
+                onClick={onClickGenerate}
+                disabled={generating || !!err || itemsCount === 0}
+                style={{
+                  padding: "12px 14px",
+                  borderRadius: 12,
+                  background: "rgba(106,217,255,0.16)",
+                  border: "1px solid rgba(106,217,255,0.35)",
+                  color: "white",
+                  cursor: generating ? "not-allowed" : "pointer",
+                  fontWeight: 950,
+                  minWidth: 190,
+                  opacity: generating ? 0.75 : 1,
+                }}
+              >
+                {generating ? "Generating…" : "Generate combinations"}
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="pill"
+                onClick={() => onResetResults?.()}
+                style={{
+                  padding: "12px 14px",
+                  borderRadius: 12,
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  color: "white",
+                  cursor: "pointer",
+                  fontWeight: 900,
+                  minWidth: 150,
+                }}
+              >
+                Go Back
+              </button>
+
+              <button
+                type="button"
+                className="pill"
+                onClick={() => {
+                  onResetResults?.();
+                  onClose();
+                }}
+                style={{
+                  padding: "12px 14px",
+                  borderRadius: 12,
+                  background: "rgba(106,217,255,0.16)",
+                  border: "1px solid rgba(106,217,255,0.35)",
+                  color: "white",
+                  cursor: "pointer",
+                  fontWeight: 950,
+                  minWidth: 110,
+                }}
+              >
+                Done
+              </button>
+            </>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+
 export default function Submit() {
+
+
+  const [comboResults, setComboResults] = useState([]);
+  const [generatedAt, setGeneratedAt] = useState("");  
+  const [modalOpen, setModalOpen] = useState(false);
+  const [generating, setGenerating] = useState(false);  
   const [current, setCurrent] = useState("");
   const [items, setItems] = useState([]);
 
   const cleanedItems = useMemo(() => items.map((x) => x.trim()).filter(Boolean), [items]);
+
+  const generateCombos = async ({ size, weight_step }) => {
+  setGenerating(true);
+  try {
+    const res = await fetch(
+      "https://generatingcombinations-production.up.railway.app/generate-combinations",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: cleanedItems,
+          size,
+          weight_step,
+        }),
+      }
+    );
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(txt || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    console.log("Generated:", data);
+
+    setComboResults(data.combinations || []);
+    setGeneratedAt(data.generated_at || "");
+    // DO NOT close modal now — we want to show results in it
+  } catch (e) {
+    console.error(e);
+    alert("Failed to generate combinations (check console).");
+  } finally {
+    setGenerating(false);
+  }
+};
 
   const addItem = () => {
     const v = current.trim();
@@ -73,7 +499,7 @@ export default function Submit() {
             </div>
 
             <motion.h1 className="h1" variants={fadeUp} custom={1}>
-              Add your materials / concepts
+              Add your materials concepts
               <span style={{ display: "block", color: "#6ad9ff" }}>
                 one at a time
               </span>
@@ -238,11 +664,13 @@ export default function Submit() {
 
                     <PrimaryButton
                       style={{ flex: 1 }}
-                      onClick={() => {
-                        // later: send cleanedItems to backend / store in DB / generate combos
-                        console.log("Saved list:", cleanedItems);
-                        alert(`Saved ${cleanedItems.length} items`);
-                      }}
+                     onClick={() => {
+                     if (cleanedItems.length === 0) return;
+                     setComboResults([]);
+                     setGeneratedAt("");
+                     setModalOpen(true);
+}}
+
                     >
                       Continue
                     </PrimaryButton>
@@ -253,6 +681,25 @@ export default function Submit() {
                   </div>
                 </div>
               </div>
+
+<GenerateModal
+  open={modalOpen}
+  onClose={() => setModalOpen(false)}
+  onGenerate={generateCombos}
+  itemsCount={cleanedItems.length}
+  itemsPreview={cleanedItems.slice(0, 10).join(", ") + (cleanedItems.length > 10 ? " …" : "")}
+  defaultK={Math.min(3, Math.max(1, cleanedItems.length))}
+  defaultWeightStep={1}
+  generating={generating}
+  results={comboResults}
+  generatedAt={generatedAt}
+  onResetResults={() => {
+    setComboResults([]);
+    setGeneratedAt("");
+  }}
+/>
+
+
             </motion.div>
           </motion.div>
 
@@ -262,5 +709,7 @@ export default function Submit() {
         </main>
       </div>
     </div>
+
+    
   );
 }

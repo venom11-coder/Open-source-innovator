@@ -167,7 +167,7 @@ export default function Landing() {
                     style={{ width: "100%", padding: "12px", borderRadius: 12, background: "rgba(255,255,255,0.05)", color: "white" }}
                   />
                   
-                  <PrimaryButton style={{ marginTop: 8 }} onClick={() => navigate("/how")}>
+                  <PrimaryButton style={{ marginTop: 8 }} onClick={() => navigate("/Combinations")}>
                     Create account
                   </PrimaryButton>
 
