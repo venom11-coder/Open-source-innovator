@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Annotated, List, Literal, Optional
+from typing import  List
 
 
 # strctured output for items inputted and number of combinations at each time

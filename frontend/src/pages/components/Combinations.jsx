@@ -26,6 +26,7 @@ function GenerateModal({
   onGenerate,
   itemsCount,
   itemsPreview,
+  downloadCsv,
   defaultK = 2,
   defaultWeightStep = 1,
   generating,
@@ -373,6 +374,25 @@ function GenerateModal({
               </button>
 
               <button
+  type="button"
+  className="pill"
+  onClick={downloadCsv}
+  style={{
+    padding: "12px 14px",
+    borderRadius: 12,
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.10)",
+    color: "white",
+    cursor: "pointer",
+    fontWeight: 950,
+    minWidth: 160,
+  }}
+>
+  Download CSV
+</button>
+
+
+              <button
                 type="button"
                 className="pill"
                 onClick={() => {
@@ -405,6 +425,7 @@ export default function Submit() {
 
 
   const [comboResults, setComboResults] = useState([]);
+  const [lastK, setLastK] = useState(0);
   const [generatedAt, setGeneratedAt] = useState("");  
   const [modalOpen, setModalOpen] = useState(false);
   const [generating, setGenerating] = useState(false);  
@@ -413,8 +434,69 @@ export default function Submit() {
 
   const cleanedItems = useMemo(() => items.map((x) => x.trim()).filter(Boolean), [items]);
 
+  const downloadCsv = async () => {
+  try {
+    if (!Array.isArray(comboResults) || comboResults.length === 0) {
+      alert("No combinations to download.");
+      return;
+    }
+
+    // Convert results -> List[str] for your backend model
+    const combinationsAsStrings = comboResults.map((r, idx) => {
+      if (typeof r === "string") return r; // just in case
+      const n = r?.compound_number ?? (idx + 1);
+      const mats = (r?.materials || []).join(" | ");
+      return `${n}: ${mats}`;
+    });
+
+const payload = {
+  items: cleanedItems,
+  size: lastK, // ✅ guaranteed int
+  combinations: combinationsAsStrings,
+  combos: `generated_at=${generatedAt || ""}`,
+};
+
+    const res = await fetch(
+      "https://generatingcombinations-production.up.railway.app/create-csv",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(txt || `HTTP ${res.status}`);
+    }
+
+    // Get filename from Content-Disposition (backend generates it)
+    const cd = res.headers.get("Content-Disposition") || "";
+    const match = cd.match(/filename="([^"]+)"/);
+    const filename = match?.[1] ?? "combinations.csv";
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    console.error(e);
+    alert("Failed to download CSV (check console).");
+  }
+};
+
+
   const generateCombos = async ({ size, weight_step }) => {
   setGenerating(true);
+  setLastK(size);
+
   try {
     const res = await fetch(
       "https://generatingcombinations-production.up.railway.app/generate-combinations",
@@ -691,6 +773,7 @@ export default function Submit() {
   defaultK={Math.min(3, Math.max(1, cleanedItems.length))}
   defaultWeightStep={1}
   generating={generating}
+  downloadCsv={downloadCsv} 
   results={comboResults}
   generatedAt={generatedAt}
   onResetResults={() => {

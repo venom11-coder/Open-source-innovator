@@ -16,6 +16,7 @@ def create_csv_file():
     job_id = "1234"
     created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     seconds = round(time.time() - start_time, 4)
+    combos = "Generated 6 combinations in 0.0001s at 2026-01-11 04:51 AM EST"
 
     # ---------- PATH TO DESKTOP ----------
     desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
@@ -34,7 +35,7 @@ def create_csv_file():
             # Metadata rows
             writer.writerow(["Id: "+ job_id + ""])
             writer.writerow(["Created_at: "+ created_at+ ""])
-            writer.writerow(["Time to generate: " +seconds+ " seconds"])
+            writer.writerow(["Details: " +combos+ ""])
             writer.writerow([])
 
             # Column header

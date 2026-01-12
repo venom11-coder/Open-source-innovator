@@ -1,9 +1,9 @@
 import csv
-from urllib.request import urlopen
-from fastapi import FastAPI, Request, File, UploadFile, Form
+from fastapi import FastAPI
+from datetime import datetime, timezone
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from model import Output_Csv
+from model_csv import Output_Csv
 import uuid
 import io
 
@@ -17,39 +17,35 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+     expose_headers=["Content-Disposition"],  # so React can read filename header
 )
 
 
 @app.post("/create-csv")
-async def create_csv(request: Request):
-    data = await request.json()
-
-    job_id = str(uuid.uuid4())
-    created_at = data["datetime"]
-    combinations = data["combinations"]
-    seconds = data["seconds"]
-
+async def create_csv(payload: Output_Csv):
     try:
-        buf = io.StringIO()
+        buf = io.StringIO(newline="")
         w = csv.writer(buf)
 
-        w.writerow(["job_id", job_id])
-        w.writerow(["created_at", created_at])
-        w.writerow(["seconds_to_generate", seconds])
-        w.writerow([])
-        w.writerow(["compound_number", "materials"])
+        job_id = str(uuid.uuid4())
+        ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
+        filename = f"{job_id}_{ts}.csv"
 
-        for row in combinations:
-            compound_number = row.get("compound_number")
-            materials = row.get("materials", [])
-            w.writerow([compound_number, " | ".join(materials)])
+        w.writerow(["job_id", job_id])
+        w.writerow(["size", payload.size])
+        w.writerow(["items", " | ".join(payload.items)])
+        w.writerow(["combos", payload.combos])
+        w.writerow([])
+        w.writerow(["index", "combination"])
+
+        for i, combo in enumerate(payload.combinations, start=1):
+            w.writerow([i, combo])
 
         csv_bytes = buf.getvalue().encode("utf-8")
-        filename = f"{job_id}.csv"
 
         return StreamingResponse(
             io.BytesIO(csv_bytes),
-            media_type="text/csv",
+            media_type="text/csv; charset=utf-8",
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
 
