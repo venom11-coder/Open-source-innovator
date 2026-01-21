@@ -24,6 +24,8 @@ def create_csv_file():
     filepath = os.path.join(desktop_path, filename)
     # ------------------------------------
 
+    
+
     try:
         with open(filepath, mode="w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)

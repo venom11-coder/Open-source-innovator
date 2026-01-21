@@ -1,12 +1,17 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuthUser } from "../firebase/useAuthUser"; // adjust path to where your hook is
+
+import { motion } from "framer-motion";
+
 
 import Navbar from "./components/Navbar";
 import PrimaryButton from "./components/PrimaryButton";
 import FeatureCard from "./components/FeatureCard";
 
 import { signInWithGoogle, signInWithMicrosoft } from "../firebase/firebase.jsx";
+
+
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -19,6 +24,14 @@ const fadeUp = {
 
 export default function Landing() {
   const navigate = useNavigate();
+
+  const { user, loading } = useAuthUser();
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/combinations", { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
