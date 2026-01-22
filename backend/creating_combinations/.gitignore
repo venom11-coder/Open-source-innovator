@@ -3,3 +3,4 @@ test_files
 generate_combination.py
 generate_combination_test.py
 .env
+osf_output_store.py
