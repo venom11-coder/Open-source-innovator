@@ -5,6 +5,7 @@ import io
 from urllib.request import urlopen
 import httpx
 import csv
+from dotenv import load_dotenv
 import urllib
 from fastapi import FastAPI, Request, File, UploadFile, Form, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse
@@ -12,6 +13,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # initialises FastAPI
 app = FastAPI()
+
+# for accessing the variables in the .env file
+load_dotenv()
 
 PROJECT_ID = os.getenv("PROJECT_ID")
 OSF_TOKEN = os.getenv("OSF_TOKEN")
