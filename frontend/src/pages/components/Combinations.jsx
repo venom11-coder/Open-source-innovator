@@ -30,6 +30,8 @@ function GenerateModal({
   defaultK = 2,
   defaultWeightStep = 1,
   generating,
+   osfStatus,
+   osfMsg,
 
   // NEW:
   results,          // array of combinations from backend
@@ -39,6 +41,8 @@ function GenerateModal({
   const [k, setK] = useState(defaultK);
   const [weightStep, setWeightStep] = useState(defaultWeightStep);
   const [err, setErr] = useState("");
+
+
 
   // Reset inputs when opened (only when NOT showing results)
   useEffect(() => {
@@ -236,6 +240,9 @@ function GenerateModal({
                 )}
               </div>
 
+              
+
+
               <div style={{ display: "grid", gap: 6 }}>
                 <div style={{ fontWeight: 900, fontSize: 13 }}>Weight step (optional)</div>
                 <input
@@ -313,6 +320,29 @@ function GenerateModal({
             flexWrap: "wrap",
           }}
         >
+          {/* OSF status banner (shows in both input + results) */}
+{osfStatus !== "idle" && (
+  <div
+    style={{
+      padding: "10px 12px",
+      borderRadius: 12,
+      background:
+        osfStatus === "success"
+          ? "rgba(60,255,140,0.10)"
+          : osfStatus === "error"
+          ? "rgba(255,70,90,0.10)"
+          : "rgba(255,255,255,0.06)",
+      border: "1px solid rgba(255,255,255,0.10)",
+      color: "rgba(255,255,255,0.85)",
+      fontSize: 12,
+      fontWeight: 800,
+    }}
+  >
+    {osfMsg}
+  </div>
+)}
+
+
           {!showResults ? (
             <>
               <button
@@ -431,61 +461,28 @@ export default function Submit() {
   const [generating, setGenerating] = useState(false);  
   const [current, setCurrent] = useState("");
   const [items, setItems] = useState([]);
+  const [osfStatus, setOsfStatus] = useState("idle"); // idle | uploading | success | error
+  const [osfMsg, setOsfMsg] = useState("");
+
 
   const cleanedItems = useMemo(() => items.map((x) => x.trim()).filter(Boolean), [items]);
 
   const downloadCsv = async () => {
   try {
-    if (!Array.isArray(comboResults) || comboResults.length === 0) {
-      alert("No combinations to download.");
-      return;
-    }
+    const { blob, filename } = await createCsvBlob();
 
-    // Convert results -> List[str] for your backend model
-    const combinationsAsStrings = comboResults.map((r, idx) => {
-      if (typeof r === "string") return r; // just in case
-      const n = r?.compound_number ?? (idx + 1);
-      const mats = (r?.materials || []).join(" | ");
-      return `${n}: ${mats}`;
-    });
-
-const payload = {
-  items: cleanedItems,
-  size: lastK, // ✅ guaranteed int
-  combinations: combinationsAsStrings,
-  combos: `generated_at=${generatedAt || ""}`,
-};
-
-    const res = await fetch(
-      "https://generatingcombinations-production.up.railway.app/create-csv",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    );
-
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(txt || `HTTP ${res.status}`);
-    }
-
-    // Get filename from Content-Disposition (backend generates it)
-    const cd = res.headers.get("Content-Disposition") || "";
-    const match = cd.match(/filename="([^"]+)"/);
-    const filename = match?.[1] ?? "combinations.csv";
-
-    const blob = await res.blob();
     const url = URL.createObjectURL(blob);
-
     const a = document.createElement("a");
+
     a.href = url;
     a.download = filename;
+
     document.body.appendChild(a);
     a.click();
-    a.remove();
 
+    a.remove();
     URL.revokeObjectURL(url);
+
   } catch (e) {
     console.error(e);
     alert("Failed to download CSV (check console).");
@@ -493,35 +490,69 @@ const payload = {
 };
 
 
-  const generateCombos = async ({ size, weight_step }) => {
+const createCsvBlob = async ({ combos, size, generatedAt } = {}) => {
+  const useCombos = combos ?? comboResults;
+  const useSize = size ?? lastK;
+  const useTs = generatedAt ?? generatedAt;
+
+  if (!Array.isArray(useCombos) || useCombos.length === 0) {
+    throw new Error("No combinations to export.");
+  }
+
+  const combinationsAsStrings = useCombos.map((r, idx) => {
+    if (typeof r === "string") return r;
+    const n = r?.compound_number ?? (idx + 1);
+    const mats = (r?.materials || []).join(" | ");
+    return `${n}: ${mats}`;
+  });
+
+  const payload = {
+    items: cleanedItems,
+    size: useSize,
+    combinations: combinationsAsStrings,
+    combos: `generated_at=${useTs || ""}`,
+  };
+
+  const res = await fetch("https://generatingcombinations-production.up.railway.app/create-csv", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) throw new Error(await res.text());
+
+  const cd = res.headers.get("Content-Disposition") || "";
+  const match = cd.match(/filename="([^"]+)"/);
+  const filename = match?.[1] ?? "combinations.csv";
+
+  const blob = await res.blob();
+  return { blob, filename };
+};
+
+
+
+
+ const generateCombos = async ({ size, weight_step }) => {
   setGenerating(true);
   setLastK(size);
 
   try {
-    const res = await fetch(
-      "https://generatingcombinations-production.up.railway.app/generate-combinations",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: cleanedItems,
-          size,
-          weight_step,
-        }),
-      }
-    );
+    const res = await fetch("https://generatingcombinations-production.up.railway.app/generate-combinations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: cleanedItems, size, weight_step }),
+    });
 
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(txt || `HTTP ${res.status}`);
-    }
+    if (!res.ok) throw new Error(await res.text());
 
     const data = await res.json();
-    console.log("Generated:", data);
+    const combos = data.combinations || [];
+    const ts = data.generated_at || "";
 
-    setComboResults(data.combinations || []);
-    setGeneratedAt(data.generated_at || "");
-    // DO NOT close modal now — we want to show results in it
+    setComboResults(combos);
+    setGeneratedAt(ts);
+
+    await uploadToOsf({ combos, size, generatedAt: ts });
   } catch (e) {
     console.error(e);
     alert("Failed to generate combinations (check console).");
@@ -529,6 +560,53 @@ const payload = {
     setGenerating(false);
   }
 };
+
+
+
+
+
+const uploadToOsf = async ({ combos, size, generatedAt }) => {
+  setOsfStatus("uploading");
+  setOsfMsg("Uploading CSV to OSF…");
+
+  try {
+    const { blob, filename } = await createCsvBlob({ combos, size, generatedAt });
+
+    const form = new FormData();
+    form.append("file", blob, filename);
+    form.append("job_id", `combo_${size}_${Date.now()}`);
+
+    const res = await fetch("https://generatingcombinations-production.up.railway.app/upload-to-osf", {
+      method: "POST",
+      body: form,
+    });
+
+    const text = await res.text();
+    console.log("OSF upload status:", res.status);
+    console.log("OSF upload response:", text);
+
+    if (!res.ok) throw new Error(text);
+
+    const data = JSON.parse(text);
+
+    setOsfStatus("success");
+    setOsfMsg(`Saved to OSF: ${data.uploaded_filename || filename}`);
+
+    setTimeout(() => {
+      setOsfStatus("idle");
+      setOsfMsg("");
+    }, 4000);
+
+    return data;
+  } catch (e) {
+    console.error(e);
+    setOsfStatus("error");
+    setOsfMsg(e?.message || "OSF upload failed.");
+    throw e;
+  }
+};
+
+
 
   const addItem = () => {
     const v = current.trim();
@@ -767,6 +845,8 @@ const payload = {
 <GenerateModal
   open={modalOpen}
   onClose={() => setModalOpen(false)}
+  osfStatus={osfStatus}
+  osfMsg={osfMsg}
   onGenerate={generateCombos}
   itemsCount={cleanedItems.length}
   itemsPreview={cleanedItems.slice(0, 10).join(", ") + (cleanedItems.length > 10 ? " …" : "")}

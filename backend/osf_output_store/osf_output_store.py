@@ -35,70 +35,33 @@ def make_filename(job_id :  str) -> str:
     return f"{job_id}_{name}.csv"
 
 # verifies if the uploaded file is a CSV, by reading the content and verifying the format and extension
-def is_csv(file_content, filename):
-    """
-    Verifies if the provided file content is in CSV format.
-
-    Args:
-        file_content: The content of the file as a string (or bytes).
-        filename: The original name of the file (used for basic extension check
-                  and better error messages).
-
-    Returns:
-        bool: True if the content is likely a CSV, False otherwise.
-    """
-    # Optional: Basic filename extension check as a first filter
-    if filename and not filename.lower().endswith('.csv'):
-        print(f"Info: Filename extension is not .csv: {filename}")
-        # Could return False here, but we check content to be sure
-
-    # Convert bytes to string if necessary, assuming a common encoding like utf-8
-    # For more robust encoding detection, you might need the 'chardet' library
-    if isinstance(file_content, bytes):
-        try:
-            file_content = file_content.decode('utf-8')
-        except UnicodeDecodeError:
-            print("Error: Could not decode file content as utf-8.")
-            return False
-
-    # Check for empty content
-    if not file_content.strip():
+def is_csv(file_content: bytes, filename: str) -> bool:
+    # basic filename check (optional)
+    if filename and not filename.lower().endswith(".csv"):
         return False
 
-    # Use csv.Sniffer to check the dialect
+    if not file_content or not file_content.strip():
+        return False
+
+    # decode safely
     try:
-        # Sniffer needs a sample string to analyze
-        sample = file_content[:2048] # Read a sample (e.g., first 2KB)
-        dialect = csv.Sniffer().sniff(sample)
-
-        # Optional: Further checks on the detected dialect might be performed
-        # e.g., check for a reasonable delimiter, like ',' or ';'
-        if dialect.delimiter not in [',', ';', '\t']:
-             print(f"Info: Detected delimiter '{dialect.delimiter}' is unusual.")
-
-        # Try to read a few rows to ensure it's parsable
-        # Wrap content in StringIO to treat the string as a file
-        f = io.StringIO(file_content)
-        reader = csv.reader(f, dialect)
-        try:
-            for _ in range(5): # Check the first 5 rows
-                next(reader)
-        except StopIteration:
-            pass # File has fewer than 5 rows, which is fine
-        except Exception as e:
-            print(f"Error: Could not read rows with the detected dialect: {e}")
-            return False
-        
-        return True
-    
-    # If Sniffer raises an error, it's likely not a valid CSV format
-    except csv.Error as e:
-        print(f"Error: Content does not appear to be in CSV format. Details: {e}")
+        text = file_content.decode("utf-8-sig")  # handles BOM too
+    except UnicodeDecodeError:
         return False
-    
-     # Catch any other potential errors
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+
+    # try parsing as comma-separated CSV
+    try:
+        reader = csv.reader(io.StringIO(text))
+        first_row = next(reader, None)
+        if not first_row:
+            return False
+
+        # require at least 2 columns in first row
+        if len(first_row) < 2:
+            return False
+
+        return True
+    except Exception:
         return False
 
 

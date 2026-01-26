@@ -113,6 +113,8 @@ async def create_csv(payload: Output_Csv):
     # returns the filename based on the job_id and current time
 def make_filename(job_id :  str) -> str:
 
+    
+
     name = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     return f"{job_id}_{name}.csv"
 
@@ -187,45 +189,49 @@ def is_csv(file_content, filename):
 @app.post("/upload-to-osf")
 async def upload_csv_to_osf(
     file: UploadFile = File(...),
-    job_id: str | None = Form(None),  # optional: pass job_id from frontend
+    job_id: str | None = Form(None),
 ):
-    
+    print(f"Debug: upload-to-osf called. incoming filename={file.filename}")
+    print("osf id:", PROJECT_ID)
+    print("osf token set:", bool(OSF_TOKEN))
+
     try:
-     if not OSF_TOKEN or not PROJECT_ID:
-        raise HTTPException(status_code=500, detail="Missing OSF_TOKEN or OSF_PROJECT_ID")
+        if not OSF_TOKEN or not PROJECT_ID:
+            raise HTTPException(status_code=500, detail="Missing OSF_TOKEN or PROJECT_ID")
 
-     csv_bytes = await file.read()
-     if not csv_bytes:
-        raise HTTPException(status_code=400, detail="Empty file")
+        csv_bytes = await file.read()
+        if not csv_bytes:
+            raise HTTPException(status_code=400, detail="Empty file")
 
-     filename = make_filename(job_id)
-     safe_name = urllib.parse.quote(filename)
+        # validate it's actually CSV
+        if not is_csv(csv_bytes, file.filename):
+            raise HTTPException(status_code=400, detail="Uploaded file is not a valid CSV")
 
-     upload_url = (
-        f"https://files.osf.io/v1/resources/{PROJECT_ID}/providers/osfstorage/"
-        f"?kind=file&name={safe_name}"
-     )
+        # ensure job_id always exists
+        job_id = job_id or str(uuid.uuid4())
+        filename = make_filename(job_id)
+        safe_name = urllib.parse.quote(filename)
 
-     headers = {
-        "Authorization": f"Bearer {OSF_TOKEN}",
-        "Content-Type": "application/octet-stream",
-     }
+        upload_url = (
+            f"https://files.osf.io/v1/resources/{PROJECT_ID}/providers/osfstorage/"
+            f"?kind=file&name={safe_name}"
+        )
 
-     is_csv_file = is_csv(csv_bytes,file.filename)
+        headers = {
+            "Authorization": f"Bearer {OSF_TOKEN}",
+            "Content-Type": "application/octet-stream",
+        }
 
-     # valides if file is a csv or not
-     if not is_csv_file:
-        raise HTTPException(status_code=400, detail="Uploaded file is not a valid CSV")
-   
-     async with httpx.AsyncClient(timeout=120.0) as client:
-        resp = await client.put(upload_url, content=csv_bytes, headers=headers)
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            resp = await client.put(upload_url, content=csv_bytes, headers=headers)
 
-     if resp.status_code >= 400:
-        # If you want, return resp.text to see OSF's error message
-        raise HTTPException(status_code=resp.status_code, detail=resp.text)
-     
+        if resp.status_code >= 400:
+            raise HTTPException(status_code=resp.status_code, detail=resp.text)
+
+        return JSONResponse({"ok": True, "uploaded_filename": filename})
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    return JSONResponse({"ok": True, "uploaded_filename": filename})
-    
