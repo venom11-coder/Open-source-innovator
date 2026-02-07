@@ -7,7 +7,6 @@ import { motion } from "framer-motion";
 
 import Navbar from "./components/Navbar";
 import PrimaryButton from "./components/PrimaryButton";
-import FeatureCard from "./components/FeatureCard";
 
 import { signInWithGoogle, signInWithMicrosoft } from "../firebase/firebase.jsx";
 

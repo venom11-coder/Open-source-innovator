@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import Navbar from "../components/Navbar_Login";
-import PrimaryButton from "../components/PrimaryButton";
+import Navbar from "./Navbar_Login";
+import PrimaryButton from "./PrimaryButton";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
