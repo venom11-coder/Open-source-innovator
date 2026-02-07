@@ -1,0 +1,401 @@
+// src/pages/Profile.jsx
+import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { useNavigate, Link } from "react-router-dom";
+
+import Navbar from "./components/Navbar_Login";
+import PrimaryButton from "./components/PrimaryButton";
+
+// If your auth hook gives user + loading, use it:
+import { useAuthUser } from "../firebase/useAuthUser";
+
+// Firebase sign out (pick whichever you use in your project)
+import { getAuth, signOut } from "firebase/auth";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: (i = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: 0.06 * i,
+      duration: 0.55,
+      ease: [0.215, 0.61, 0.355, 1],
+    },
+  }),
+};
+
+function Pill({ children, style }) {
+  return (
+    <div
+      className="pill"
+      style={{
+        padding: "6px 10px",
+        borderRadius: 999,
+        background: "rgba(255,255,255,0.06)",
+        border: "1px solid rgba(255,255,255,0.10)",
+        color: "rgba(255,255,255,0.85)",
+        fontSize: 12,
+        fontWeight: 900,
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function ActionCard({ title, desc, pill, onClick, to, accent = "blue" }) {
+  const accentStyle =
+    accent === "red"
+      ? {
+          background: "rgba(255,70,90,0.10)",
+          border: "1px solid rgba(255,70,90,0.25)",
+        }
+      : accent === "green"
+      ? {
+          background: "rgba(60,255,140,0.10)",
+          border: "1px solid rgba(60,255,140,0.25)",
+        }
+      : {
+          background: "rgba(106,217,255,0.12)",
+          border: "1px solid rgba(106,217,255,0.30)",
+        };
+
+  const content = (
+    <div
+      className="featureCard"
+      style={{
+        cursor: onClick || to ? "pointer" : "default",
+        background: "rgba(255,255,255,0.03)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 18,
+        padding: 16,
+        display: "grid",
+        gap: 10,
+      }}
+      onClick={onClick}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center" }}>
+        <div style={{ fontWeight: 950, fontSize: 16 }}>{title}</div>
+        <div
+          className="pill"
+          style={{
+            padding: "6px 10px",
+            borderRadius: 999,
+            color: "rgba(255,255,255,0.9)",
+            fontSize: 12,
+            fontWeight: 950,
+            ...accentStyle,
+          }}
+        >
+          {pill}
+        </div>
+      </div>
+      <div style={{ color: "rgba(255,255,255,0.70)", lineHeight: 1.65, fontSize: 13 }}>
+        {desc}
+      </div>
+
+      <div style={{ marginTop: 4 }}>
+        <div
+          className="pill"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "10px 12px",
+            borderRadius: 14,
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.10)",
+            fontWeight: 900,
+            color: "rgba(255,255,255,0.9)",
+          }}
+        >
+          Open →
+        </div>
+      </div>
+    </div>
+  );
+
+  // If `to` provided, wrap in Link
+  if (to) return <Link to={to} style={{ textDecoration: "none", color: "inherit" }}>{content}</Link>;
+  return content;
+}
+
+export default function Profile() {
+  const navigate = useNavigate();
+  const { user, loading } = useAuthUser();
+
+  const [signingOut, setSigningOut] = useState(false);
+  const [mode, setMode] = useState("menu"); // menu | details
+
+  const safeName = useMemo(() => {
+    if (!user) return "";
+    return user.displayName || user.email || "User";
+  }, [user]);
+
+  const safeEmail = user?.email || "";
+  const photo = user?.photoURL || "";
+
+  const doSignOut = async () => {
+    try {
+      setSigningOut(true);
+      const auth = getAuth();
+      await signOut(auth);
+      navigate("/", { replace: true });
+    } catch (e) {
+      console.error(e);
+      alert("Sign out failed (check console).");
+    } finally {
+      setSigningOut(false);
+    }
+  };
+
+  // Your RequireAuth already blocks unauth users,
+  // but keeping this avoids flashing weird UI if loading:
+  if (loading) return null;
+
+  return (
+    <div className="bg">
+      <div className="layer">
+        <Navbar />
+
+        <main className="container hero">
+          <motion.div
+            className="card"
+            style={{ padding: "clamp(20px, 5vw, 40px)", textAlign: "left" }}
+            initial="hidden"
+            animate="show"
+            variants={fadeUp}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
+              <Pill>Account</Pill>
+              <Pill style={{ background: "rgba(106,217,255,0.12)", border: "1px solid rgba(106,217,255,0.30)" }}>
+                Signed in
+              </Pill>
+              {safeEmail ? <Pill>{safeEmail}</Pill> : null}
+            </div>
+
+            <motion.h1 className="h1" variants={fadeUp} custom={1}>
+              Profile
+              <span style={{ display: "block", color: "#6ad9ff" }}>
+                manage your account
+              </span>
+            </motion.h1>
+
+            <motion.p className="sub" variants={fadeUp} custom={2} style={{ maxWidth: 820, marginBottom: 24 }}>
+              View your details, check previous outputs, or sign out.
+            </motion.p>
+
+            {/* Header mini card */}
+            <motion.div
+              variants={fadeUp}
+              custom={3}
+              className="featureCard"
+              style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 18,
+                padding: 16,
+                display: "flex",
+                gap: 14,
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
+              <div
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 16,
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  overflow: "hidden",
+                  display: "grid",
+                  placeItems: "center",
+                  fontWeight: 950,
+                }}
+              >
+                {photo ? (
+                  <img src={photo} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <span style={{ color: "rgba(255,255,255,0.85)" }}>
+                    {(safeName || "U").slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+              </div>
+
+              <div style={{ flex: 1, minWidth: 220 }}>
+                <div style={{ fontWeight: 950, fontSize: 16 }}>{safeName}</div>
+                <div style={{ marginTop: 4, color: "rgba(255,255,255,0.60)", fontSize: 13 }}>
+                  {safeEmail || "No email available"}
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                <button
+                  className="pill"
+                  onClick={() => setMode("details")}
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: 12,
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.10)",
+                    color: "white",
+                    cursor: "pointer",
+                    fontWeight: 900,
+                  }}
+                >
+                  View details
+                </button>
+
+                <PrimaryButton onClick={() => navigate("/output")}>
+                  Previous outputs
+                </PrimaryButton>
+              </div>
+            </motion.div>
+
+            {/* MENU / DETAILS */}
+            {mode === "menu" ? (
+              <motion.div variants={fadeUp} custom={4} style={{ display: "grid", gap: 14 }}>
+                <div className="heroGrid" style={{ alignItems: "start" }}>
+                  <ActionCard
+                    title="Your Details"
+                    pill="Info"
+                    accent="blue"
+                    desc="See your name, email, UID, and account metadata."
+                    onClick={() => setMode("details")}
+                  />
+
+                  <ActionCard
+                    title="Previous Outputs"
+                    pill="History"
+                    accent="green"
+                    desc="View your published outputs (timestamped links)."
+                    to="/output"
+                  />
+
+                  <ActionCard
+                    title="Sign Out"
+                    pill={signingOut ? "Signing out…" : "Logout"}
+                    accent="red"
+                    desc="Sign out from this browser and return to the landing page."
+                    onClick={doSignOut}
+                  />
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div variants={fadeUp} custom={4} style={{ display: "grid", gap: 12 }}>
+                <div
+                  style={{
+                    padding: 16,
+                    borderRadius: 18,
+                    background: "rgba(0,0,0,0.25)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                  }}
+                >
+                  <div style={{ fontWeight: 950, fontSize: 16, marginBottom: 10 }}>Account details</div>
+
+                  <div style={{ display: "grid", gap: 10 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        padding: "10px 12px",
+                        borderRadius: 14,
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.07)",
+                      }}
+                    >
+                      <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.85)" }}>UID</div>
+                      <div style={{ color: "rgba(255,255,255,0.65)", textAlign: "right" }}>
+                        {user?.uid || "—"}
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        padding: "10px 12px",
+                        borderRadius: 14,
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.07)",
+                      }}
+                    >
+                      <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.85)" }}>Email verified</div>
+                      <div style={{ color: "rgba(255,255,255,0.65)", textAlign: "right" }}>
+                        {user?.emailVerified ? "Yes" : "No"}
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        padding: "10px 12px",
+                        borderRadius: 14,
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.07)",
+                      }}
+                    >
+                      <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.85)" }}>Provider</div>
+                      <div style={{ color: "rgba(255,255,255,0.65)", textAlign: "right" }}>
+                        {(user?.providerData?.[0]?.providerId || "—").replace(".com", "")}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                  <button
+                    className="pill"
+                    onClick={() => setMode("menu")}
+                    style={{
+                      padding: "12px 14px",
+                      borderRadius: 12,
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.10)",
+                      color: "white",
+                      cursor: "pointer",
+                      fontWeight: 900,
+                      minWidth: 110,
+                    }}
+                  >
+                    Back
+                  </button>
+
+                  <button
+                    className="pill"
+                    onClick={doSignOut}
+                    disabled={signingOut}
+                    style={{
+                      padding: "12px 14px",
+                      borderRadius: 12,
+                      background: "rgba(255,70,90,0.10)",
+                      border: "1px solid rgba(255,70,90,0.25)",
+                      color: "white",
+                      cursor: signingOut ? "not-allowed" : "pointer",
+                      fontWeight: 950,
+                      minWidth: 130,
+                      opacity: signingOut ? 0.75 : 1,
+                    }}
+                  >
+                    {signingOut ? "Signing out…" : "Sign out"}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            <footer className="footer" style={{ textAlign: "center", marginTop: 40 }}>
+              Built for combinatorial innovation • 2026 • v1.0.4
+            </footer>
+          </motion.div>
+        </main>
+      </div>
+    </div>
+  );
+}

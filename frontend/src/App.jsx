@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import About from "./pages/About";
 import HowToUse from "./pages/HowToUse";
 import Output from "./pages/Output";
+import Profile from "./pages/Profile"; // adjust if needed
 import Landing from "./pages/Landing";
 import Combinations from "./pages/components/Combinations.jsx"; // adjust if needed
 
@@ -29,6 +30,9 @@ export default function App() {
       <Route path="/about" element={<About />} />
       <Route path="/how" element={<HowToUse />} />
       <Route path="/output" element={<Output />} />
+      <Route path="/profile" element={
+          <Profile />
+      } />
     </Routes>
   );
 }
