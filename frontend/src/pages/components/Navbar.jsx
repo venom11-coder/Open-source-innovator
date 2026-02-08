@@ -124,20 +124,46 @@ export default function Navbar_Login() {
                   overflow: "hidden",
                 }}
               >
-                <div style={{ padding: 14, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                  <div style={{ fontWeight: 950, fontSize: 13, color: "rgba(255,255,255,0.9)" }}>
-                    {user?.displayName || "Account"}
-                  </div>
-                  <div style={{ marginTop: 4, fontSize: 12, color: "rgba(255,255,255,0.60)" }}>
-                    {user?.email || "—"}
-                  </div>
-                </div>
+               <div style={{ padding: 14, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+  <button
+    onClick={() => {
+      setOpen(false);
+      navigate("/profile?view=details");
+    }}
+    style={{
+      width: "100%",
+      background: "transparent",
+      border: "none",
+      padding: 0,
+      textAlign: "left",
+      cursor: "pointer",
+    }}
+  >
+    <div style={{ fontWeight: 950, fontSize: 13, color: "rgba(255,255,255,0.9)" }}>
+      {user?.displayName || "Account"}
+    </div>
+
+    <div
+      style={{
+        marginTop: 4,
+        fontSize: 12,
+        color: "#6ad9ff",
+        fontWeight: 900,
+        textDecoration: "underline",
+        textUnderlineOffset: 3,
+      }}
+    >
+      {user?.email || "—"}
+    </div>
+  </button>
+</div>
+
 
                 <MenuBtn
                   label="Account details"
                   onClick={() => {
                     setOpen(false);
-                    navigate("/profile");
+                   navigate("/profile?view=details");
                   }}
                 />
                 <MenuBtn

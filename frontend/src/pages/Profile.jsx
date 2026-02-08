@@ -1,7 +1,7 @@
 // src/pages/Profile.jsx
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 
 import Navbar from "./components/Navbar_Login";
 import PrimaryButton from "./components/PrimaryButton";
@@ -123,11 +123,23 @@ function ActionCard({ title, desc, pill, onClick, to, accent = "blue" }) {
 }
 
 export default function Profile() {
+
+  const [searchParams] = useSearchParams();
+  
   const navigate = useNavigate();
   const { user, loading } = useAuthUser();
 
   const [signingOut, setSigningOut] = useState(false);
-  const [mode, setMode] = useState("menu"); // menu | details
+
+  const initialMode = searchParams.get("view") === "details" ? "details" : "menu";
+  const [mode, setMode] = useState(initialMode); // menu | details
+
+  useEffect(() => {
+  if (searchParams.get("view") === "details") setMode("details");
+  else setMode("menu");
+}, [searchParams]);
+
+
 
   const safeName = useMemo(() => {
     if (!user) return "";
@@ -225,12 +237,41 @@ export default function Profile() {
                 )}
               </div>
 
-              <div style={{ flex: 1, minWidth: 220 }}>
-                <div style={{ fontWeight: 950, fontSize: 16 }}>{safeName}</div>
-                <div style={{ marginTop: 4, color: "rgba(255,255,255,0.60)", fontSize: 13 }}>
-                  {safeEmail || "No email available"}
-                </div>
-              </div>
+  <div
+  style={{
+    flex: 1,
+    minWidth: 220,
+    cursor: "pointer",
+    padding: "6px 8px",
+    borderRadius: 10,
+    transition: "all 0.18s ease",
+  }}
+  onClick={() => setMode("details")}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.background = "transparent";
+  }}
+>
+  <div style={{ fontWeight: 950, fontSize: 16 }}>
+    {safeName}
+  </div>
+
+  <div
+    style={{
+      marginTop: 4,
+      color: "#6ad9ff",
+      fontSize: 13,
+      textDecoration: "underline",
+      textUnderlineOffset: 3,
+      fontWeight: 800,
+    }}
+  >
+    {safeEmail || "No email available"}
+  </div>
+</div>
+
 
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
                 <button

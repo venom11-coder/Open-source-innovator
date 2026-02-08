@@ -110,47 +110,75 @@ export default function Navbar_Login() {
               <span style={{ opacity: 0.6 }}>▾</span>
             </button>
 
-            {open && (
-              <div
-                style={{
-                  position: "absolute",
-                  right: 0,
-                  marginTop: 10,
-                  width: 260,
-                  borderRadius: 16,
-                  background: "rgba(12,14,20,0.92)",
-                  border: "1px solid rgba(255,255,255,0.10)",
-                  boxShadow: "0 22px 70px rgba(0,0,0,0.55)",
-                  overflow: "hidden",
-                }}
-              >
-                <div style={{ padding: 14, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                  <div style={{ fontWeight: 950, fontSize: 13, color: "rgba(255,255,255,0.9)" }}>
-                    {user?.displayName || "Account"}
-                  </div>
-                  <div style={{ marginTop: 4, fontSize: 12, color: "rgba(255,255,255,0.60)" }}>
-                    {user?.email || "—"}
-                  </div>
-                </div>
+{open && (
+  <div
+    style={{
+      position: "absolute",
+      right: 0,
+      marginTop: 10,
+      width: 260,
+      borderRadius: 16,
+      background: "rgba(12,14,20,0.92)",
+      border: "1px solid rgba(255,255,255,0.10)",
+      boxShadow: "0 22px 70px rgba(0,0,0,0.55)",
+      overflow: "hidden",
+    }}
+  >
+    <div style={{ padding: 14, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+      <button
+        onClick={() => {
+          setOpen(false);
+          navigate("/profile?view=details");
+        }}
+        style={{
+          width: "100%",
+          background: "transparent",
+          border: "none",
+          padding: 0,
+          textAlign: "left",
+          cursor: "pointer",
+        }}
+      >
+        <div style={{ fontWeight: 950, fontSize: 13, color: "rgba(255,255,255,0.9)" }}>
+          {user?.displayName || "Account"}
+        </div>
 
-                <MenuBtn
-                  label="Account details"
-                  onClick={() => {
-                    setOpen(false);
-                    navigate("/profile");
-                  }}
-                />
-                <MenuBtn
-                  label="Previous outputs"
-                  onClick={() => {
-                    setOpen(false);
-                    navigate("/output");
-                  }}
-                />
-                <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }} />
-                <MenuBtn label="Sign out" danger onClick={doSignOut} />
-              </div>
-            )}
+        <div
+          style={{
+            marginTop: 4,
+            fontSize: 12,
+            color: "#6ad9ff",
+            fontWeight: 900,
+            textDecoration: "underline",
+            textUnderlineOffset: 3,
+          }}
+        >
+          {user?.email || "—"}
+        </div>
+      </button>
+    </div>
+
+    <MenuBtn
+      label="Account details"
+      onClick={() => {
+        setOpen(false);
+        navigate("/profile?view=details");
+      }}
+    />
+
+    <MenuBtn
+      label="Previous outputs"
+      onClick={() => {
+        setOpen(false);
+        navigate("/output");
+      }}
+    />
+
+    <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }} />
+    <MenuBtn label="Sign out" danger onClick={doSignOut} />
+  </div>
+)}
+
           </div>
         </div>
       </div>
