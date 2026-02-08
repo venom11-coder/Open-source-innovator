@@ -1,5 +1,5 @@
 // src/pages/components/Navbar_Login.jsx
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuthUser } from "../../firebase/useAuthUser";
 import { getAuth, signOut } from "firebase/auth";
 import { useEffect, useRef, useState } from "react";
@@ -67,7 +67,7 @@ export default function Navbar_Login() {
           <NavItem to="/combinations">Combinations</NavItem>
           <NavItem to="/about">About</NavItem>
           <NavItem to="/how">How to use</NavItem>
-          <NavItem to="/output">Output</NavItem>
+          <NavItem to="/output">Privacy Policy</NavItem>
 
           {/* PROFILE DROPDOWN */}
           <div ref={menuRef} style={{ position: "relative" }}>
@@ -158,21 +158,50 @@ export default function Navbar_Login() {
   );
 }
 
+
+
 function NavItem({ to, children }) {
+  const location = useLocation();
+  const active = location.pathname === to;
+
   return (
     <Link
       to={to}
       style={{
         textDecoration: "none",
-        color: "rgba(255,255,255,0.85)",
         fontWeight: 800,
         fontSize: 14,
+        padding: "8px 12px",
+        borderRadius: 10,
+        transition: "all 0.18s ease",
+        color: active ? "#6ad9ff" : "rgba(255,255,255,0.85)",
+        background: active ? "rgba(106,217,255,0.12)" : "transparent",
+        border: active
+          ? "1px solid rgba(106,217,255,0.35)"
+          : "1px solid transparent",
+      }}
+      onMouseEnter={(e) => {
+        if (active) return;
+        e.target.style.color = "#6ad9ff";
+        e.target.style.background = "rgba(255,255,255,0.06)";
+      }}
+      onMouseLeave={(e) => {
+        if (active) return;
+        e.target.style.color = "rgba(255,255,255,0.85)";
+        e.target.style.background = "transparent";
+      }}
+      onMouseDown={(e) => {
+        e.target.style.transform = "scale(0.96)";
+      }}
+      onMouseUp={(e) => {
+        e.target.style.transform = "scale(1)";
       }}
     >
       {children}
     </Link>
   );
 }
+
 
 function MenuBtn({ label, onClick, danger }) {
   return (

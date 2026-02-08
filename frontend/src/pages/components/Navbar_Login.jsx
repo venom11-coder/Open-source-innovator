@@ -1,5 +1,5 @@
 // src/pages/components/Navbar_Login.jsx
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuthUser } from "../../firebase/useAuthUser";
 import { getAuth, signOut } from "firebase/auth";
 import { useEffect, useRef, useState } from "react";
@@ -67,7 +67,7 @@ export default function Navbar_Login() {
           <NavItem to="/combinations">Combinations</NavItem>
           <NavItem to="/about">About</NavItem>
           <NavItem to="/how">How to use</NavItem>
-          <NavItem to="/output">Output</NavItem>
+          <NavItem to="/output">Privacy Policy</NavItem>
 
           {/* PROFILE DROPDOWN */}
           <div ref={menuRef} style={{ position: "relative" }}>
@@ -159,20 +159,68 @@ export default function Navbar_Login() {
 }
 
 function NavItem({ to, children }) {
+  const location = useLocation();
+  const active = location.pathname === to;
+
+  const base = {
+    textDecoration: "none",
+    fontWeight: 800,
+    fontSize: 14,
+    padding: "8px 12px",
+    borderRadius: 10,
+    display: "inline-flex",
+    alignItems: "center",
+    cursor: "pointer",
+    userSelect: "none",
+    transition: "all 0.18s ease",
+  };
+
+  const activeStyle = active
+    ? {
+        color: "#6ad9ff",
+        background: "rgba(106,217,255,0.12)",
+        border: "1px solid rgba(106,217,255,0.35)",
+        boxShadow: "0 0 0 1px rgba(106,217,255,0.08)",
+      }
+    : {
+        color: "rgba(255,255,255,0.85)",
+        background: "transparent",
+        border: "1px solid transparent",
+        boxShadow: "none",
+      };
+
   return (
     <Link
       to={to}
-      style={{
-        textDecoration: "none",
-        color: "rgba(255,255,255,0.85)",
-        fontWeight: 800,
-        fontSize: 14,
+      style={{ ...base, ...activeStyle }}
+      onMouseEnter={(e) => {
+        if (active) return;
+        e.currentTarget.style.color = "#6ad9ff";
+        e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+        e.currentTarget.style.border = "1px solid rgba(255,255,255,0.10)";
+        e.currentTarget.style.boxShadow =
+          "0 0 0 1px rgba(106,217,255,0.12), 0 10px 28px rgba(0,0,0,0.25)";
+      }}
+      onMouseLeave={(e) => {
+        if (active) return;
+        e.currentTarget.style.color = "rgba(255,255,255,0.85)";
+        e.currentTarget.style.background = "transparent";
+        e.currentTarget.style.border = "1px solid transparent";
+        e.currentTarget.style.boxShadow = "none";
+        e.currentTarget.style.transform = "scale(1)";
+      }}
+      onMouseDown={(e) => {
+        e.currentTarget.style.transform = "scale(0.96)";
+      }}
+      onMouseUp={(e) => {
+        e.currentTarget.style.transform = "scale(1)";
       }}
     >
       {children}
     </Link>
   );
 }
+
 
 function MenuBtn({ label, onClick, danger }) {
   return (
