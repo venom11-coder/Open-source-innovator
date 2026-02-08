@@ -19,11 +19,24 @@ export default function Navbar_Login() {
     return () => window.removeEventListener("mousedown", onDown);
   }, []);
 
-  const doSignOut = async () => {
+const hardSignOut = async () => {
+  try {
+    // 1) Clear any local storage you might use
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // 2) Sign out Firebase
     await signOut(getAuth());
+
+    // 3) Close dropdown + go home
     setOpen(false);
     navigate("/", { replace: true });
-  };
+  } catch (e) {
+    console.error(e);
+    alert("Sign out failed (check console).");
+  }
+};
+
 
   const initials = (user?.displayName || user?.email || "U").slice(0, 1).toUpperCase();
   const photo = user?.photoURL;
@@ -175,7 +188,7 @@ export default function Navbar_Login() {
     />
 
     <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }} />
-    <MenuBtn label="Sign out" danger onClick={doSignOut} />
+    <MenuBtn label="Sign out" danger onClick={hardSignOut} />
   </div>
 )}
 
