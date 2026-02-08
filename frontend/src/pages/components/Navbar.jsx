@@ -56,10 +56,29 @@ export default function Navbar_Login() {
           >
             OI
           </div>
-          <div style={{ lineHeight: 1.1 }}>
-            <div style={{ fontWeight: 900, fontSize: 14, color: "rgba(255,255,255,0.9)" }}>Open Innovation</div>
-            <div style={{ fontWeight: 950, fontSize: 16 }}>Prior-Art Generator</div>
-          </div>
+<Link
+  to="/combinations"   // 👈 change if you want another page
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    textDecoration: "none",
+    color: "inherit",
+    cursor: "pointer",
+  }}
+>
+
+
+  <div style={{ lineHeight: 1.1 }}>
+    <div style={{ fontWeight: 900, fontSize: 14, color: "rgba(255,255,255,0.9)" }}>
+      Open Innovation
+    </div>
+    <div style={{ fontWeight: 950, fontSize: 16 }}>
+      Prior-Art Generator
+    </div>
+  </div>
+</Link>
+
         </div>
 
         {/* RIGHT LINKS */}
