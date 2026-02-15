@@ -11,6 +11,7 @@ import { useAuthUser } from "../firebase/useAuthUser";
 
 // Firebase sign out (pick whichever you use in your project)
 import { getAuth, signOut } from "firebase/auth";
+import { addRecentOutput } from "./recentOutputs";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -216,26 +217,61 @@ export default function Profile() {
               }}
             >
               <div
-                style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: 16,
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.10)",
-                  overflow: "hidden",
-                  display: "grid",
-                  placeItems: "center",
-                  fontWeight: 950,
-                }}
-              >
-                {photo ? (
-                  <img src={photo} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : (
-                  <span style={{ color: "rgba(255,255,255,0.85)" }}>
-                    {(safeName || "U").slice(0, 1).toUpperCase()}
-                  </span>
-                )}
-              </div>
+  style={{
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    position: "relative",
+    overflow: "hidden",
+    border: "1px solid rgba(255,255,255,0.14)",
+    background:
+      "radial-gradient(120% 120% at 20% 10%, rgba(106,217,255,0.28) 0%, rgba(140,90,255,0.18) 45%, rgba(255,255,255,0.04) 100%)",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.45)",
+    display: "grid",
+    placeItems: "center",
+  }}
+>
+  {photo ? (
+    <img
+      src={photo}
+      alt="avatar"
+      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+    />
+  ) : (
+    <>
+      {/* soft inner highlight */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "radial-gradient(80% 80% at 30% 25%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 60%)",
+        }}
+      />
+
+      {/* Initial badge */}
+      <div
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: 12,
+          background: "rgba(0,0,0,0.25)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          display: "grid",
+          placeItems: "center",
+          color: "rgba(255,255,255,0.92)",
+          fontWeight: 950,
+          fontSize: 16,
+          letterSpacing: 0.5,
+          textTransform: "uppercase",
+        }}
+      >
+        {(safeName || "U").slice(0, 1)}
+      </div>
+    </>
+  )}
+</div>
+
 
   <div
   style={{

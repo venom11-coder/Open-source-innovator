@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import Navbar from "./Navbar_Login";
 import PrimaryButton from "./PrimaryButton";
 
+import { addRecentOutput } from "../recentOutputs";
+
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -608,6 +610,11 @@ const uploadToOsf = async ({ combos, size, generatedAt }) => {
 
     // ✅ this is the exact file page URL from backend
     setOsfUrl(data.osf_file_page_url || "https://osf.io/rcusy/files/osfstorage");
+
+    addRecentOutput({
+  created_at: data.created_at || new Date().toISOString(), // best if backend sends it
+  osf_url: data.osf_file_page_url,
+});
 
     return data;
   } catch (e) {
