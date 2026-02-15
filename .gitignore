@@ -45,6 +45,7 @@ client_secret*.json
 serviceAccountKey*.json
 *.secret.json
 *.private.json
+3-D-Printing-Materials-Generator-main
 
 # =========================
 # FastAPI / Uvicorn
