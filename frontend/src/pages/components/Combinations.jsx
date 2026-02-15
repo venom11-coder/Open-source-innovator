@@ -134,24 +134,32 @@ function GenerateModal({
             </div>
 
             <button
-              className="pill"
-              onClick={() => {
-                // optional: if results showing, reset when closing
-                onResetResults?.();
-                onClose();
-              }}
-              style={{
-                padding: "10px 12px",
-                borderRadius: 12,
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.10)",
-                color: "white",
-                cursor: "pointer",
-                fontWeight: 900,
-              }}
-            >
-              Close
-            </button>
+  type="button"
+  aria-label="Close"
+  onClick={() => {
+    onResetResults?.();
+    onClose();
+  }}
+  style={{
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    display: "grid",
+    placeItems: "center",
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.10)",
+    color: "rgba(255,255,255,0.92)",
+    cursor: "pointer",
+    fontWeight: 900,
+    lineHeight: 1,
+    userSelect: "none",
+  }}
+  onMouseDown={(e) => e.stopPropagation()}
+  title="Close"
+>
+  <span style={{ fontSize: 18, transform: "translateY(-1px)" }}>×</span>
+</button>
+
           </div>
 
           {!showResults && (
@@ -867,32 +875,19 @@ const uploadToOsf = async ({ combos, size, generatedAt }) => {
   }}
 />
 
-{osfStatus !== "idle" && (
+{osfStatus === "success" && !!osfUrl && showResults && (
   <button
     type="button"
     className="pill"
-    onClick={() => osfUrl && window.open(osfUrl, "_blank")}
-    style={{
-      padding: "10px 12px",
-      borderRadius: 12,
-      background:
-        osfStatus === "success"
-          ? "rgba(60,255,140,0.10)"
-          : osfStatus === "error"
-          ? "rgba(255,70,90,0.10)"
-          : "rgba(255,255,255,0.06)",
-      border: "1px solid rgba(255,255,255,0.10)",
-      color: "rgba(255,255,255,0.92)",
-      fontSize: 12,
-      fontWeight: 900,
-      cursor: osfUrl ? "pointer" : "default",
-      whiteSpace: "nowrap",
+    onClick={(e) => {
+      e.stopPropagation();
+      window.open(osfUrl, "_blank", "noopener,noreferrer");
     }}
-    title={osfUrl ? "Open in OSF" : ""}
   >
-    {osfMsg}
+    View on OSF
   </button>
 )}
+
 
 
 
