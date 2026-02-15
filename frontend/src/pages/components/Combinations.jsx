@@ -577,7 +577,9 @@ const createCsvBlob = async ({ combos, size, generatedAt } = {}) => {
 
 const uploadToOsf = async ({ combos, size, generatedAt }) => {
   setOsfStatus("uploading");
-  setOsfMsg("Uploading CSV to OSF…");
+  setOsfMsg(`Saved to OSF: ${data.uploaded_filename || filename}`);
+  setOsfUrl(data.osf_file_page_url || "https://osf.io/rcusy/files/osfstorage");
+
 
   try {
     const { blob, filename } = await createCsvBlob({ combos, size, generatedAt });
