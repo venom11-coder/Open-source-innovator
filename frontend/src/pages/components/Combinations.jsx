@@ -23,6 +23,7 @@ function GenerateModal({
   onClose,
   onGenerate,
   itemsCount,
+  osfUrl,
   itemsPreview,
   downloadCsv,
   defaultK = 2,
@@ -320,7 +321,13 @@ function GenerateModal({
         >
           {/* OSF status banner (shows in both input + results) */}
 {osfStatus !== "idle" && (
-  <div
+  <button
+    type="button"
+    className="pill"
+    onClick={(e) => {
+      e.stopPropagation();
+      if (osfUrl) window.open(osfUrl, "_blank", "noopener,noreferrer");
+    }}
     style={{
       padding: "10px 12px",
       borderRadius: 12,
@@ -331,13 +338,17 @@ function GenerateModal({
           ? "rgba(255,70,90,0.10)"
           : "rgba(255,255,255,0.06)",
       border: "1px solid rgba(255,255,255,0.10)",
-      color: "rgba(255,255,255,0.85)",
+      color: "rgba(255,255,255,0.92)",
       fontSize: 12,
-      fontWeight: 800,
+      fontWeight: 900,
+      cursor: osfUrl ? "pointer" : "not-allowed",
+      whiteSpace: "nowrap",
     }}
+    disabled={!osfUrl}
+    title={osfUrl ? "Open in OSF" : "No OSF link available"}
   >
     {osfMsg}
-  </div>
+  </button>
 )}
 
 
@@ -453,6 +464,7 @@ export default function Submit() {
 
 
   const [comboResults, setComboResults] = useState([]);
+  const [osfUrl, setOsfUrl] = useState("https://osf.io/rcusy/files/osfstorage");
   const [lastK, setLastK] = useState(0);
   const [generatedAt, setGeneratedAt] = useState("");  
   const [modalOpen, setModalOpen] = useState(false);
@@ -590,10 +602,6 @@ const uploadToOsf = async ({ combos, size, generatedAt }) => {
     setOsfStatus("success");
     setOsfMsg(`Saved to OSF: ${data.uploaded_filename || filename}`);
 
-    setTimeout(() => {
-      setOsfStatus("idle");
-      setOsfMsg("");
-    }, 4000);
 
     return data;
   } catch (e) {
@@ -845,13 +853,14 @@ const uploadToOsf = async ({ combos, size, generatedAt }) => {
   onClose={() => setModalOpen(false)}
   osfStatus={osfStatus}
   osfMsg={osfMsg}
+  osfUrl={"https://osf.io/rcusy/files/osfstorage"}   // or osfUrl state
   onGenerate={generateCombos}
   itemsCount={cleanedItems.length}
   itemsPreview={cleanedItems.slice(0, 10).join(", ") + (cleanedItems.length > 10 ? " …" : "")}
   defaultK={Math.min(3, Math.max(1, cleanedItems.length))}
   defaultWeightStep={1}
   generating={generating}
-  downloadCsv={downloadCsv} 
+  downloadCsv={downloadCsv}
   results={comboResults}
   generatedAt={generatedAt}
   onResetResults={() => {
@@ -859,6 +868,34 @@ const uploadToOsf = async ({ combos, size, generatedAt }) => {
     setGeneratedAt("");
   }}
 />
+
+{osfStatus !== "idle" && (
+  <button
+    type="button"
+    className="pill"
+    onClick={() => osfUrl && window.open(osfUrl, "_blank")}
+    style={{
+      padding: "10px 12px",
+      borderRadius: 12,
+      background:
+        osfStatus === "success"
+          ? "rgba(60,255,140,0.10)"
+          : osfStatus === "error"
+          ? "rgba(255,70,90,0.10)"
+          : "rgba(255,255,255,0.06)",
+      border: "1px solid rgba(255,255,255,0.10)",
+      color: "rgba(255,255,255,0.92)",
+      fontSize: 12,
+      fontWeight: 900,
+      cursor: osfUrl ? "pointer" : "default",
+      whiteSpace: "nowrap",
+    }}
+    title={osfUrl ? "Open in OSF" : ""}
+  >
+    {osfMsg}
+  </button>
+)}
+
 
 
             </motion.div>
