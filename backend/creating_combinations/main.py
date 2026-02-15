@@ -174,36 +174,60 @@ async def upload_csv_to_osf(
     file: UploadFile = File(...),
     job_id: str | None = Form(None),
 ):
-    if not OSF_TOKEN or not PROJECT_ID:
-        raise HTTPException(status_code=500, detail="Missing OSF_TOKEN or PROJECT_ID")
+    try:
+        if not OSF_TOKEN or not PROJECT_ID:
+            raise HTTPException(status_code=500, detail="Missing OSF_TOKEN or OSF_PROJECT_ID")
 
-    csv_bytes = await file.read()
-    if not csv_bytes:
-        raise HTTPException(status_code=400, detail="Empty file")
+        csv_bytes = await file.read()
+        if not csv_bytes:
+            raise HTTPException(status_code=400, detail="Empty file")
 
-    # (optional) relax this validation; csv.Sniffer often fails on small csvs
-    if not is_csv(csv_bytes, file.filename):
-        raise HTTPException(status_code=400, detail="Uploaded file is not a valid CSV")
+        filename = make_filename(job_id)
+        safe_name = urllib.parse.quote(filename)
 
-    job_id = job_id or str(uuid.uuid4())
-    filename = make_filename(job_id)
-    safe_name = urllib.parse.quote(filename)
+        upload_url = (
+            f"https://files.osf.io/v1/resources/{PROJECT_ID}/providers/osfstorage/"
+            f"?kind=file&name={safe_name}"
+        )
 
-    upload_url = (
-        f"https://files.osf.io/v1/resources/{PROJECT_ID}/providers/osfstorage/"
-        f"?kind=file&name={safe_name}"
-    )
+        headers = {
+            "Authorization": f"Bearer {OSF_TOKEN}",
+            "Content-Type": "application/octet-stream",
+        }
 
-    headers = {
-        "Authorization": f"Bearer {OSF_TOKEN}",
-        "Content-Type": "application/octet-stream",
-    }
+        if not is_csv(csv_bytes, file.filename):
+            raise HTTPException(status_code=400, detail="Uploaded file is not a valid CSV")
 
-    async with httpx.AsyncClient(timeout=120.0, follow_redirects=True) as client:
-        resp = await client.put(upload_url, content=csv_bytes, headers=headers)
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            resp = await client.put(upload_url, content=csv_bytes, headers=headers)
 
-    if resp.status_code >= 400:
-        raise HTTPException(status_code=resp.status_code, detail=resp.text)
+        if resp.status_code >= 400:
+            raise HTTPException(status_code=resp.status_code, detail=resp.text)
 
-    return {"ok": True, "uploaded_filename": filename}
+        # ✅ NEW: parse OSF response to get the file page URL
+        payload = resp.json()
 
+        # Most common: JSON:API links.html
+        osf_file_page_url = (
+            payload.get("data", {}).get("links", {}).get("html")
+            or payload.get("data", {}).get("links", {}).get("self")
+        )
+        
+        print(f"File uploaded successfully. OSF file page URL: {osf_file_page_url}")
+        print(f"Full OSF response payload: {payload}")
+        print(f"Upload URL: {upload_url}")
+        print(f"Filename: {filename}")
+        print(f"Safe Filename: {safe_name}")
+        print(f"Request Headers: {headers}")
+
+        return JSONResponse({
+            "ok": True,
+            "uploaded_filename": filename,
+            "osf_file_page_url": osf_file_page_url,  # ✅ this will be like https://osf.io/rcusy/files/zk5hu
+        })
+    
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
