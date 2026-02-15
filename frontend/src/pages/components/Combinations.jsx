@@ -577,9 +577,7 @@ const createCsvBlob = async ({ combos, size, generatedAt } = {}) => {
 
 const uploadToOsf = async ({ combos, size, generatedAt }) => {
   setOsfStatus("uploading");
-  setOsfMsg(`Saved to OSF: ${data.uploaded_filename || filename}`);
-  setOsfUrl(data.osf_file_page_url || "https://osf.io/rcusy/files/osfstorage");
-
+  setOsfMsg("Uploading CSV to OSF…");
 
   try {
     const { blob, filename } = await createCsvBlob({ combos, size, generatedAt });
@@ -593,17 +591,15 @@ const uploadToOsf = async ({ combos, size, generatedAt }) => {
       body: form,
     });
 
-    const text = await res.text();
-    console.log("OSF upload status:", res.status);
-    console.log("OSF upload response:", text);
+    const data = await res.json(); // ✅ parse JSON directly
 
-    if (!res.ok) throw new Error(text);
-
-    const data = JSON.parse(text);
+    if (!res.ok) throw new Error(data?.detail || "OSF upload failed");
 
     setOsfStatus("success");
-    setOsfMsg(`Saved to OSF: ${data.uploaded_filename || filename}`);
+    setOsfMsg(`view on OSF`);
 
+    // ✅ this is the exact file page URL from backend
+    setOsfUrl(data.osf_file_page_url || "https://osf.io/rcusy/files/osfstorage");
 
     return data;
   } catch (e) {
@@ -855,7 +851,7 @@ const uploadToOsf = async ({ combos, size, generatedAt }) => {
   onClose={() => setModalOpen(false)}
   osfStatus={osfStatus}
   osfMsg={osfMsg}
-  osfUrl={"https://osf.io/rcusy/files/osfstorage"}   // or osfUrl state
+  osfUrl={osfUrl}   // or osfUrl state
   onGenerate={generateCombos}
   itemsCount={cleanedItems.length}
   itemsPreview={cleanedItems.slice(0, 10).join(", ") + (cleanedItems.length > 10 ? " …" : "")}

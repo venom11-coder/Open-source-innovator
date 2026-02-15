@@ -207,11 +207,13 @@ async def upload_csv_to_osf(
         # ✅ NEW: parse OSF response to get the file page URL
         payload = resp.json()
 
-        # Most common: JSON:API links.html
-        osf_file_page_url = (
-            payload.get("data", {}).get("links", {}).get("html")
-            or payload.get("data", {}).get("links", {}).get("self")
-        )
+        file_id_full = payload.get("data", {}).get("id", "")  # "osfstorage/69916..."
+        file_id = file_id_full.split("/")[-1]                # "69916..."
+
+        project_id = PROJECT_ID  # "Rcusy" in your case
+
+        osf_file_page_url = f"https://osf.io/{project_id}/files/osfstorage/{file_id}/"
+
         
         print(f"File uploaded successfully. OSF file page URL: {osf_file_page_url}")
         print(f"Full OSF response payload: {payload}")
@@ -221,10 +223,12 @@ async def upload_csv_to_osf(
         print(f"Request Headers: {headers}")
 
         return JSONResponse({
-            "ok": True,
-            "uploaded_filename": filename,
-            "osf_file_page_url": osf_file_page_url,  # ✅ this will be like https://osf.io/rcusy/files/zk5hu
-        })
+    "ok": True,
+    "uploaded_filename": filename,
+    "osf_file_page_url": osf_file_page_url,
+    "osf_file_id": file_id,
+})
+
     
 
     except HTTPException:

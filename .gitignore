@@ -46,6 +46,7 @@ serviceAccountKey*.json
 *.secret.json
 *.private.json
 3-D-Printing-Materials-Generator-main
+main.py
 
 # =========================
 # FastAPI / Uvicorn
