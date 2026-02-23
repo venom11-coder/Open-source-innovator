@@ -1,9 +1,12 @@
-const OUTPUTS_KEY = "recent_outputs_v1";
-const MAX_OUTPUTS = 10;
+// src/pages/recentOutputs.js
 
-function loadRecentOutputs() {
+const KEY = "recent_outputs_v1";
+const MAX = 10;
+
+// Safe parse
+function read() {
   try {
-    const raw = localStorage.getItem(OUTPUTS_KEY);
+    const raw = localStorage.getItem(KEY);
     const arr = raw ? JSON.parse(raw) : [];
     return Array.isArray(arr) ? arr : [];
   } catch {
@@ -11,32 +14,38 @@ function loadRecentOutputs() {
   }
 }
 
-function saveRecentOutputs(list) {
-  localStorage.setItem(OUTPUTS_KEY, JSON.stringify(list));
+function write(arr) {
+  localStorage.setItem(KEY, JSON.stringify(arr));
 }
 
-// Call this when backend returns { created_at, osf_url }
-export function addRecentOutput({ created_at, osf_url }) {
-  if (!created_at || !osf_url) return;
+// Add newest at top, keep only last 10
+export function addRecentOutput(entry) {
+  if (!entry?.osf_url) return;
 
-  const prev = loadRecentOutputs();
+  const prev = read();
 
-  // de-dupe by URL (or by created_at+url)
-  const filtered = prev.filter((x) => x?.osf_url !== osf_url);
+  const next = [
+    {
+      id: entry.id || `${Date.now()}_${Math.random().toString(16).slice(2)}`,
+      created_at: entry.created_at || new Date().toISOString(),
+      osf_url: entry.osf_url,
+      input_preview: entry.input_preview || "",
+    },
+    ...prev,
+  ]
+    // remove duplicates by osf_url (keep the newest)
+    .filter(
+      (x, idx, arr) => idx === arr.findIndex((y) => y.osf_url === x.osf_url)
+    )
+    .slice(0, MAX);
 
-  const next = [{ created_at, osf_url }, ...filtered].slice(0, MAX_OUTPUTS);
-
-  saveRecentOutputs(next);
-  return next;
+  write(next);
 }
 
 export function getRecentOutputs() {
-  // optional: ensure sorted newest-first
-  return loadRecentOutputs().sort(
-    (a, b) => new Date(b.created_at) - new Date(a.created_at)
-  );
+  return read();
 }
 
 export function clearRecentOutputs() {
-  localStorage.removeItem(OUTPUTS_KEY);
+  localStorage.removeItem(KEY);
 }

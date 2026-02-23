@@ -472,6 +472,8 @@ function GenerateModal({
 
 export default function Submit() {
 
+ 
+
 
   const [comboResults, setComboResults] = useState([]);
   const [osfUrl, setOsfUrl] = useState("https://osf.io/rcusy/files/osfstorage");
@@ -587,7 +589,7 @@ const createCsvBlob = async ({ combos, size, generatedAt } = {}) => {
 
 const uploadToOsf = async ({ combos, size, generatedAt }) => {
   setOsfStatus("uploading");
-  setOsfMsg("Uploading CSV to OSF…");
+  setOsfMsg("Uploading to OSF…");
 
   try {
     const { blob, filename } = await createCsvBlob({ combos, size, generatedAt });
@@ -601,26 +603,27 @@ const uploadToOsf = async ({ combos, size, generatedAt }) => {
       body: form,
     });
 
-    const data = await res.json(); // ✅ parse JSON directly
-
+    const data = await res.json();
     if (!res.ok) throw new Error(data?.detail || "OSF upload failed");
 
+    // ✅ Make UI say only "View"
     setOsfStatus("success");
-    setOsfMsg(`view on OSF`);
+    setOsfMsg("View");
+    setOsfUrl(data.osf_file_page_url || "");
 
-    // ✅ this is the exact file page URL from backend
-    setOsfUrl(data.osf_file_page_url || "https://osf.io/rcusy/files/osfstorage");
-
+    // ✅ Save to localStorage (last 10)
     addRecentOutput({
-  created_at: data.created_at || new Date().toISOString(), // best if backend sends it
-  osf_url: data.osf_file_page_url,
-});
+      osf_url: data.osf_file_page_url,
+      created_at: generatedAt || new Date().toISOString(),
+      input_preview:
+        cleanedItems.slice(0, 10).join(", ") + (cleanedItems.length > 10 ? " …" : ""),
+    });
 
     return data;
   } catch (e) {
     console.error(e);
     setOsfStatus("error");
-    setOsfMsg(e?.message || "OSF upload failed.");
+    setOsfMsg("OSF upload failed");
     throw e;
   }
 };

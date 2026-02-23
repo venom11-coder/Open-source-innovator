@@ -179,8 +179,8 @@ export default function Landing() {
                     style={{ width: "100%", padding: "12px", borderRadius: 12, background: "rgba(255,255,255,0.05)", color: "white" }}
                   />
                   
-                  <PrimaryButton style={{ marginTop: 8 }} onClick={() => navigate("/Combinations")}>
-                    Create account
+                  <PrimaryButton style={{ marginTop: 8 }} onClick={() => navigate("/combinations")}>
+                  Create account
                   </PrimaryButton>
 
                   <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "10px 0", color: "rgba(255,255,255,0.3)", fontSize: 11 }}>

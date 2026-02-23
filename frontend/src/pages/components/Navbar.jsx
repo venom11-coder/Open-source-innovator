@@ -82,122 +82,140 @@ export default function Navbar_Login() {
         </div>
 
         {/* RIGHT LINKS */}
-        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          <NavItem to="/combinations">Combinations</NavItem>
-          <NavItem to="/about">About</NavItem>
-          <NavItem to="/how">How to use</NavItem>
-          <NavItem to="/output">Privacy Policy</NavItem>
+<div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+  <NavItem to="/combinations">Combinations</NavItem>
+  <NavItem to="/about">About</NavItem>
+  <NavItem to="/how">How to use</NavItem>
+  <NavItem to="/output">Privacy Policy</NavItem>
 
-          {/* PROFILE DROPDOWN */}
-          <div ref={menuRef} style={{ position: "relative" }}>
+  {/* PROFILE DROPDOWN (only when signed in) */}
+  {user && (
+    <div ref={menuRef} style={{ position: "relative" }}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="pill"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "8px 10px",
+          borderRadius: 14,
+          background: "rgba(255,255,255,0.06)",
+          border: "1px solid rgba(255,255,255,0.10)",
+          color: "white",
+          cursor: "pointer",
+          fontWeight: 900,
+        }}
+      >
+        <div
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: 10,
+            overflow: "hidden",
+            background: "rgba(255,255,255,0.08)",
+            border: "1px solid rgba(255,255,255,0.10)",
+            display: "grid",
+            placeItems: "center",
+            fontWeight: 950,
+          }}
+        >
+          {photo ? (
+            <img
+              src={photo}
+              alt="avatar"
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          ) : (
+            initials
+          )}
+        </div>
+        <span style={{ opacity: 0.9 }}>Profile</span>
+        <span style={{ opacity: 0.6 }}>▾</span>
+      </button>
+
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            right: 0,
+            marginTop: 10,
+            width: 260,
+            borderRadius: 16,
+            background: "rgba(12,14,20,0.92)",
+            border: "1px solid rgba(255,255,255,0.10)",
+            boxShadow: "0 22px 70px rgba(0,0,0,0.55)",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              padding: 14,
+              borderBottom: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
             <button
-              onClick={() => setOpen((v) => !v)}
-              className="pill"
+              onClick={() => {
+                setOpen(false);
+                navigate("/profile?view=details");
+              }}
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "8px 10px",
-                borderRadius: 14,
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.10)",
-                color: "white",
+                width: "100%",
+                background: "transparent",
+                border: "none",
+                padding: 0,
+                textAlign: "left",
                 cursor: "pointer",
-                fontWeight: 900,
               }}
             >
               <div
                 style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 10,
-                  overflow: "hidden",
-                  background: "rgba(255,255,255,0.08)",
-                  border: "1px solid rgba(255,255,255,0.10)",
-                  display: "grid",
-                  placeItems: "center",
                   fontWeight: 950,
+                  fontSize: 13,
+                  color: "rgba(255,255,255,0.9)",
                 }}
               >
-                {photo ? (
-                  <img src={photo} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : (
-                  initials
-                )}
+                {user?.displayName || "Account"}
               </div>
-              <span style={{ opacity: 0.9 }}>Profile</span>
-              <span style={{ opacity: 0.6 }}>▾</span>
-            </button>
 
-            {open && (
               <div
                 style={{
-                  position: "absolute",
-                  right: 0,
-                  marginTop: 10,
-                  width: 260,
-                  borderRadius: 16,
-                  background: "rgba(12,14,20,0.92)",
-                  border: "1px solid rgba(255,255,255,0.10)",
-                  boxShadow: "0 22px 70px rgba(0,0,0,0.55)",
-                  overflow: "hidden",
+                  marginTop: 4,
+                  fontSize: 12,
+                  color: "#6ad9ff",
+                  fontWeight: 900,
+                  textDecoration: "underline",
+                  textUnderlineOffset: 3,
                 }}
               >
-               <div style={{ padding: 14, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-  <button
-    onClick={() => {
-      setOpen(false);
-      navigate("/profile?view=details");
-    }}
-    style={{
-      width: "100%",
-      background: "transparent",
-      border: "none",
-      padding: 0,
-      textAlign: "left",
-      cursor: "pointer",
-    }}
-  >
-    <div style={{ fontWeight: 950, fontSize: 13, color: "rgba(255,255,255,0.9)" }}>
-      {user?.displayName || "Account"}
-    </div>
-
-    <div
-      style={{
-        marginTop: 4,
-        fontSize: 12,
-        color: "#6ad9ff",
-        fontWeight: 900,
-        textDecoration: "underline",
-        textUnderlineOffset: 3,
-      }}
-    >
-      {user?.email || "—"}
-    </div>
-  </button>
-</div>
-
-
-                <MenuBtn
-                  label="Account details"
-                  onClick={() => {
-                    setOpen(false);
-                   navigate("/profile?view=details");
-                  }}
-                />
-                <MenuBtn
-                  label="Previous outputs"
-                  onClick={() => {
-                    setOpen(false);
-                    navigate("/output");
-                  }}
-                />
-                <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }} />
-                <MenuBtn label="Sign out" danger onClick={doSignOut} />
+                {user?.email || "—"}
               </div>
-            )}
+            </button>
           </div>
+
+          <MenuBtn
+            label="Account details"
+            onClick={() => {
+              setOpen(false);
+              navigate("/profile?view=details");
+            }}
+          />
+          <MenuBtn
+            label="Previous outputs"
+            onClick={() => {
+              setOpen(false);
+              navigate("/output");
+            }}
+          />
+
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }} />
+          <MenuBtn label="Sign out" danger onClick={doSignOut} />
         </div>
+      )}
+    </div>
+  )}
+
+         </div>
       </div>
     </div>
   );
