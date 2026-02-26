@@ -1,3 +1,6 @@
+
+![Homepage](./image_1.png)
+
 # 🔬 Open-Source Innovator
 
 A full-stack web platform that generates **combinatorial innovations** from user-defined lists of materials or concepts — automatically publishing timestamped records to the web as **open-source prior art**.
@@ -108,4 +111,3 @@ All generated combinations are published under open-source licenses to ensure pu
 
 *Built under research supervision of Dr. Joshua Pearce, Open Sustainability Technology Lab, Western University.*
 
-![Homepage](./image_1.png)
