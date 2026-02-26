@@ -107,3 +107,5 @@ All generated combinations are published under open-source licenses to ensure pu
 [LinkedIn](https://www.linkedin.com/in/aman-sharma-086310271/) · [Portfolio](https://aman-portfolio-three-xi.vercel.app/) · [GitHub](https://github.com/venom11-coder)
 
 *Built under research supervision of Dr. Joshua Pearce, Open Sustainability Technology Lab, Western University.*
+
+![Homepage](./image_1.png)
