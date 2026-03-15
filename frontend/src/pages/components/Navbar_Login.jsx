@@ -5,6 +5,9 @@ import { getAuth, signOut } from "firebase/auth";
 import { useEffect, useRef, useState } from "react";
 
 export default function Navbar_Login() {
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const { user } = useAuthUser();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -19,21 +22,26 @@ export default function Navbar_Login() {
     return () => window.removeEventListener("mousedown", onDown);
   }, []);
 
-const hardSignOut = async () => {
+const doSignOut = async () => {
   try {
-    // 1) Clear any local storage you might use
+    setSigningOut(true);
+
+    // Clear any local storage you might use
     localStorage.clear();
     sessionStorage.clear();
 
-    // 2) Sign out Firebase
+    // Sign out Firebase
     await signOut(getAuth());
 
-    // 3) Close dropdown + go home
+    // Close everything + go home
     setOpen(false);
+    setConfirmOpen(false);
     navigate("/", { replace: true });
   } catch (e) {
     console.error(e);
     alert("Sign out failed (check console).");
+  } finally {
+    setSigningOut(false);
   }
 };
 
@@ -188,16 +196,189 @@ const hardSignOut = async () => {
     />
 
     <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }} />
-    <MenuBtn label="Sign out" danger onClick={hardSignOut} />
+    <MenuBtn
+  label="Sign out"
+  danger
+  onClick={() => {
+    setOpen(false);        // close dropdown
+    setConfirmOpen(true);  // open modal
+  }}
+/>
   </div>
 )}
 
           </div>
         </div>
+         </div>
+
+      {/* SIGN OUT CONFIRM MODAL */}
+      {confirmOpen && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      zIndex: 9999,
+      background: "rgba(0,0,0,0.62)",
+      backdropFilter: "blur(8px)",
+      display: "grid",
+      placeItems: "center",
+      padding: 16,
+    }}
+    onMouseDown={(e) => {
+      if (e.target === e.currentTarget) setConfirmOpen(false);
+    }}
+  >
+    <div
+      style={{
+        width: "min(560px, 100%)",
+        borderRadius: 22,
+        background:
+          "radial-gradient(120% 120% at 20% 10%, rgba(106,217,255,0.12) 0%, rgba(140,90,255,0.10) 45%, rgba(255,255,255,0.03) 100%)",
+        border: "1px solid rgba(255,255,255,0.12)",
+        boxShadow: "0 22px 80px rgba(0,0,0,0.62)",
+        overflow: "hidden",
+        position: "relative",
+      }}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      {/* soft inner highlight */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          background:
+            "radial-gradient(80% 80% at 30% 20%, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 60%)",
+        }}
+      />
+
+      {/* HEADER */}
+      <div
+        style={{
+          padding: "18px 18px 12px 18px",
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: 12,
+          position: "relative",
+        }}
+      >
+        <div style={{ display: "grid", gap: 6 }}>
+          <div style={{ fontWeight: 950, fontSize: 18, color: "rgba(255,255,255,0.92)" }}>
+            Sign out?
+          </div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.62)", lineHeight: 1.55 }}>
+            Are you sure you want to sign out? You can click <strong>Cancel</strong> to stay signed in.
+          </div>
+        </div>
+
+        {/* X button */}
+        <button
+          type="button"
+          aria-label="Close"
+          onClick={() => setConfirmOpen(false)}
+          disabled={signingOut}
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 12,
+            display: "grid",
+            placeItems: "center",
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.10)",
+            color: "rgba(255,255,255,0.92)",
+            cursor: signingOut ? "not-allowed" : "pointer",
+            fontWeight: 900,
+            lineHeight: 1,
+            opacity: signingOut ? 0.7 : 1,
+          }}
+          title="Close"
+        >
+          <span style={{ fontSize: 18, transform: "translateY(-1px)" }}>×</span>
+        </button>
+      </div>
+
+      {/* BODY */}
+      <div style={{ padding: "0 18px 16px 18px" }}>
+        <div
+          style={{
+            padding: 14,
+            borderRadius: 16,
+            background: "rgba(0,0,0,0.22)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            color: "rgba(255,255,255,0.72)",
+            fontSize: 13,
+            lineHeight: 1.6,
+          }}
+        >
+          You’ll be signed out from this browser session.
+          <div style={{ marginTop: 8, color: "rgba(255,255,255,0.55)", fontSize: 12 }}>
+            Signed in as <span style={{ color: "#6ad9ff", fontWeight: 900 }}>{user?.email || "—"}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* FOOTER BUTTONS */}
+      <div
+        style={{
+          padding: 18,
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: 10,
+          flexWrap: "wrap",
+          position: "relative",
+        }}
+      >
+        <button
+          type="button"
+          className="pill"
+          onClick={() => setConfirmOpen(false)}
+          disabled={signingOut}
+          style={{
+            padding: "12px 14px",
+            borderRadius: 12,
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.10)",
+            color: "white",
+            cursor: signingOut ? "not-allowed" : "pointer",
+            fontWeight: 900,
+            minWidth: 120,
+            opacity: signingOut ? 0.7 : 1,
+          }}
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          className="pill"
+          onClick={doSignOut}
+          disabled={signingOut}
+          style={{
+            padding: "12px 14px",
+            borderRadius: 12,
+            background: "rgba(255,70,90,0.14)",
+            border: "1px solid rgba(255,70,90,0.35)",
+            color: "white",
+            cursor: signingOut ? "not-allowed" : "pointer",
+            fontWeight: 950,
+            minWidth: 140,
+            opacity: signingOut ? 0.7 : 1,
+          }}
+        >
+          {signingOut ? "Signing out…" : "Sign out"}
+        </button>
       </div>
     </div>
-  );
-}
+  </div>
+  
+)}
+        </div>
+      )}
+
+  
+
 
 function NavItem({ to, children }) {
   const location = useLocation();
