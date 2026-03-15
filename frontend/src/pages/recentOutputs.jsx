@@ -10,8 +10,11 @@ function read() {
 
 function write(arr) {
   localStorage.setItem(KEY, JSON.stringify(arr));
-  // This triggers the UI to refresh
-  window.dispatchEvent(new Event("recent_outputs_updated"));
+  // Wrapping in a 0ms timeout pushes the event to the end of the 
+  // execution stack, ensuring the component is ready to hear it.
+  setTimeout(() => {
+    window.dispatchEvent(new Event("recent_outputs_updated"));
+  }, 0);
 }
 
 export function addRecentOutput(entry) {

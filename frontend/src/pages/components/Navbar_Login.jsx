@@ -88,7 +88,7 @@ const doSignOut = async () => {
           <NavItem to="/combinations">Combinations</NavItem>
           <NavItem to="/about">About</NavItem>
           <NavItem to="/how">How to use</NavItem>
-          <NavItem to="/output">Privacy Policy</NavItem>
+          <NavItem to="/privacy">Privacy Policy</NavItem>
 
           {/* PROFILE DROPDOWN */}
           <div ref={menuRef} style={{ position: "relative" }}>

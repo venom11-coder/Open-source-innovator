@@ -571,9 +571,10 @@ const generateCombos = async ({ size, weight_step }) => {
     const data = await res.json();
     const combos = data.combinations || [];
     const ts = data.generated_at || "";
-    const newOsfUrl = data.osf_file_page_url || data.osf_url;
+    
+    // 1. Declare it once with a fallback
+    const newOsfUrl = data.osf_file_page_url || data.osf_url || "https://osf.io/rcusy/files/osfstorage";
 
-    // Update all states at once
     setComboResults(combos);
     setGeneratedAt(ts);
     if (newOsfUrl) setOsfUrl(newOsfUrl);
@@ -581,15 +582,15 @@ const generateCombos = async ({ size, weight_step }) => {
     setOsfStatus("success");
     setOsfMsg("Saved to OSF");
 
-    // Log to recent outputs
+    // 2. Use that variable here
     addRecentOutput({
-      osf_url: newOsfUrl,
+      osf_url: newOsfUrl, 
       created_at: ts || new Date().toISOString(),
       k_value: size,
       item_count: cleanedItems.length,
       input_preview: cleanedItems.slice(0, 5).join(", ") + (cleanedItems.length > 5 ? "..." : ""),
     });
-
+    
   } catch (e) {
     console.error(e);
     setOsfStatus("error");

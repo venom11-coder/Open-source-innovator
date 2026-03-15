@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import About from "./pages/About";
 import HowToUse from "./pages/HowToUse";
-import Output from "./pages/Output";
+import PrivacyPolicy from "./pages/Output"
 import Profile from "./pages/Profile";
 import Landing from "./pages/Landing";
 import Combinations from "./pages/components/Combinations.jsx";
@@ -34,7 +34,9 @@ export default function App() {
       <Route path="/how" element={<HowToUse />} />
       
       {/* CHANGE 'path' TO "/history" TO MATCH YOUR NAVIGATION */}
-      <Route path="/history" element={<PreviousOutputsPage />} />
+<Route path="/privacy" element={<PrivacyPolicy />} />
+<Route path="/history" element={<PreviousOutputsPage />} />
+<Route path="/output" element={<PreviousOutputsPage />} />
       
       <Route path="/profile" element={<Profile />} />
     </Routes>
