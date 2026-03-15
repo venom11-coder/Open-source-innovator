@@ -560,32 +560,46 @@ const generateCombos = async ({ size, weight_step }) => {
   setOsfMsg("Generating and Uploading...");
 
   try {
-    const res = await fetch("https://generatingcombinations-production.up.railway.app/generate-combinations", {
+    // STEP 1: Generate the combinations
+    const genRes = await fetch("https://generatingcombinations-production.up.railway.app/generate-combinations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ items: cleanedItems, size, weight_step }),
     });
+    if (!genRes.ok) throw new Error("Generation failed");
+    const genData = await genRes.json();
 
-    if (!res.ok) throw new Error(await res.text());
+    // STEP 2: Create a dummy CSV file in memory to send to your /upload-to-osf endpoint
+    const csvContent = "Compound,Materials\n" + genData.combinations.map((c, i) => `${i+1},"${c.materials.join(" | ")}"`).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const file = new File([blob], `combos_${size}.csv`, { type: "text/csv" });
 
-    const data = await res.json();
-    const combos = data.combinations || [];
-    const ts = data.generated_at || "";
-    
-    // 1. Declare it once with a fallback
-    const newOsfUrl = data.osf_file_page_url || data.osf_url || "https://osf.io/rcusy/files/osfstorage";
+    // STEP 3: Call your OSF endpoint (The one you just showed me)
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("job_id", `k${size}_items${cleanedItems.length}`);
 
-    setComboResults(combos);
-    setGeneratedAt(ts);
-    if (newOsfUrl) setOsfUrl(newOsfUrl);
-    
+    const uploadRes = await fetch("https://generatingcombinations-production.up.railway.app/upload-to-osf", {
+      method: "POST",
+      body: formData, // No headers needed, browser sets Multipart
+    });
+
+    if (!uploadRes.ok) throw new Error("OSF Upload failed");
+    const uploadData = await uploadRes.json();
+
+    // STEP 4: Use the REAL URL from the response
+    const finalUrl = uploadData.osf_file_page_url; 
+
+    setComboResults(genData.combinations);
+    setGeneratedAt(genData.generated_at);
+    setOsfUrl(finalUrl); 
     setOsfStatus("success");
     setOsfMsg("Saved to OSF");
 
-    // 2. Use that variable here
+    // STEP 5: Add to history with the UNIQUE file link
     addRecentOutput({
-      osf_url: newOsfUrl, 
-      created_at: ts || new Date().toISOString(),
+      osf_url: finalUrl, 
+      created_at: genData.generated_at || new Date().toISOString(),
       k_value: size,
       item_count: cleanedItems.length,
       input_preview: cleanedItems.slice(0, 5).join(", ") + (cleanedItems.length > 5 ? "..." : ""),
@@ -595,16 +609,10 @@ const generateCombos = async ({ size, weight_step }) => {
     console.error(e);
     setOsfStatus("error");
     setOsfMsg("Upload failed");
-    alert("Failed to generate combinations.");
   } finally {
     setGenerating(false);
   }
 };
-
-// You can safely remove the old uploadToOsf function entirely 
-// as its logic is now inside generateCombos.
-
-
 
   const addItem = () => {
     const v = current.trim();
