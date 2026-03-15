@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Navbar from "./components/Navbar_Login";
-import { getRecentOutputs, clearRecentOutputs } from "./recentOutputs";
+import { getRecentOutputs, clearRecentOutputs, removeRecentOutput } from "./recentOutputs";
 
 export default function OutputPage() {
   const [outputs, setOutputs] = useState([]);
@@ -57,25 +57,54 @@ export default function OutputPage() {
                     month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
                   });
 
+
+                  
+
                   return (
-                    <div key={o.id} style={{
-                      display: "flex", justifyContent: "space-between", alignItems: "center",
-                      padding: "14px 18px", borderRadius: 14,
-                      background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)"
-                    }}>
-                      <div>
-                        <div style={{ fontWeight: 850, color: "white" }}>{label}</div>
-                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{o.input_preview}</div>
-                      </div>
-                      <button
-                        className="pill"
-                        onClick={() => window.open(o.osf_url, "_blank")}
-                        style={{ padding: "8px 14px", cursor: "pointer", fontWeight: 900 }}
-                      >
-                        View →
-                      </button>
-                    </div>
-                  );
+  <div key={o.id} style={{
+    display: "flex", justifyContent: "space-between", alignItems: "center",
+    padding: "14px 18px", borderRadius: 14,
+    background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)"
+  }}>
+    <div>
+      <div style={{ fontWeight: 850, color: "white" }}>{label}</div>
+      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{o.input_preview}</div>
+    </div>
+    
+    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <button
+        className="pill"
+        onClick={() => window.open(o.osf_url, "_blank")}
+        style={{ padding: "8px 14px", cursor: "pointer", fontWeight: 900 }}
+      >
+        View →
+      </button>
+
+      {/* NEW DELETE BUTTON */}
+      <button
+        onClick={() => removeRecentOutput(o.id)}
+        style={{
+          background: "rgba(255,100,100,0.1)",
+          border: "1px solid rgba(255,100,100,0.2)",
+          color: "rgba(255,100,100,0.8)",
+          width: "32px",
+          height: "32px",
+          borderRadius: "8px",
+          cursor: "pointer",
+          fontWeight: "bold",
+          display: "grid",
+          placeItems: "center",
+          transition: "0.2s"
+        }}
+        title="Remove from history"
+        onMouseEnter={(e) => e.target.style.background = "rgba(255,100,100,0.2)"}
+        onMouseLeave={(e) => e.target.style.background = "rgba(255,100,100,0.1)"}
+      >
+        ✕
+      </button>
+    </div>
+  </div>
+);
                 })}
               </div>
             )}
