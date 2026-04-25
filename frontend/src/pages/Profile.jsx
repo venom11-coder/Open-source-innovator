@@ -127,6 +127,8 @@ export default function Profile() {
 
   const handleSignOutClick = () => setShowSignOutConfirm(true);
 
+  const manual_user = JSON.parse(localStorage("user")|| "null");
+
   const [searchParams] = useSearchParams();
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
   
@@ -142,7 +144,6 @@ export default function Profile() {
   if (searchParams.get("view") === "details") setMode("details");
   else setMode("menu");
 }, [searchParams]);
-
 
 
   const safeName = useMemo(() => {
