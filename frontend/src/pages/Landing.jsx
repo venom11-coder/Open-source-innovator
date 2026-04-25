@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthUser } from "../firebase/useAuthUser"; // adjust path to where your hook is
 
-import { motion } from "framer-motion";
+import { motion, time } from "framer-motion";
 
 
 import Navbar from "./components/Navbar";
@@ -24,10 +24,14 @@ const fadeUp = {
 export default function Landing() {
   const navigate = useNavigate();
 
+ 
   const { user, loading } = useAuthUser();
 
   useEffect(() => {
-    if (!loading && user) {
+  
+    const current_user = localStorage.getItem("user");
+
+    if (!loading && (user || current_user)) {
       navigate("/combinations", { replace: true });
     }
   }, [user, loading, navigate]);
@@ -58,6 +62,34 @@ export default function Landing() {
       alert(err?.message || "Microsoft login failed");
     }
   };
+
+  const handleManualLogin = async () => {
+
+    
+   try {
+      
+       if(!email || !password || !firstName || !lastName) {
+        alert("Please fill all the required sections!");
+        return;
+       }
+
+        const manual_user = {
+        firstName,
+        lastName,
+        email,
+        password,
+       };
+
+       localStorage.setItem("user", JSON.stringify(manual_user));
+       navigate("/combinations");
+       
+   }  catch(err) {
+    console.error("Error in manual login:", err);
+   }
+
+     
+  
+  }
 
   return (
     <div className="bg">
@@ -179,7 +211,7 @@ export default function Landing() {
                     style={{ width: "100%", padding: "12px", borderRadius: 12, background: "rgba(255,255,255,0.05)", color: "white" }}
                   />
                   
-                  <PrimaryButton style={{ marginTop: 8 }} onClick={() => navigate("/combinations")}>
+                  <PrimaryButton style={{ marginTop: 8 }} onClick={ handleManualLogin}>
                   Create account
                   </PrimaryButton>
 
