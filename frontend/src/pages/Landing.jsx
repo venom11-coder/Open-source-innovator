@@ -31,7 +31,7 @@ export default function Landing() {
   
     const current_user = localStorage.getItem("user");
 
-    if (!loading && (user || current_user)) {
+    if (current_user) {
       navigate("/combinations", { replace: true });
     }
   }, [user, loading, navigate]);

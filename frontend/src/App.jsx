@@ -13,8 +13,10 @@ import { useAuthUser } from "./firebase/useAuthUser";
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuthUser();
+  const manual_user = localStorage.getItem("user");
+
   if (loading) return null;
-  if (!user) return <Navigate to="/" replace />;
+  if (!user && !manual_user) return <Navigate to="/" replace />;
   return children;
 }
 
