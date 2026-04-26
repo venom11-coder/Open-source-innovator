@@ -143,7 +143,7 @@ export default function Profile() {
 
   const [signingOut, setSigningOut] = useState(false);
 
-  const safeEmail = is_manual ? localdata?.email : (user?.email || "");
+  const safeEmail = localUser.is_manual? localUser.email : (user?.email || "No email available");
 
   const photo = user?.photo;
 
