@@ -127,7 +127,7 @@ export default function Profile() {
 
   const handleSignOutClick = () => setShowSignOutConfirm(true);
 
-  const manual_user = JSON.parse(localStorage("user")|| "null");
+  const manual_user = localStorage("user");
 
   const [searchParams] = useSearchParams();
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);

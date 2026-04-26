@@ -27,13 +27,24 @@ export default function Landing() {
  
   const { user, loading } = useAuthUser();
 
+  const [manual_user, setManualUser] = useState(null);
+  const [is_manual, set_is_manual] = useState(false);
+
   useEffect(() => {
   
-    const current_user = localStorage.getItem("user");
-
-    if (current_user) {
+    const saved_user = localStorage.getItem("user");
+    
+    if(!loading) {
+    if (user ||saved_user) {
+      if(saved_user) {
+      const parsedUser = JSON.parse(saved_user);
+      setManualUser(parsedUser);
+      set_is_manual(parsedUser.is_manual || false);
+      }
       navigate("/combinations", { replace: true });
+    
     }
+   }
   }, [user, loading, navigate]);
 
   const [firstName, setFirstName] = useState("");
@@ -78,9 +89,12 @@ export default function Landing() {
         lastName,
         email,
         password,
+        is_manual: true,
        };
 
        localStorage.setItem("user", JSON.stringify(manual_user));
+       setManualUser(manual_user);
+       set_is_manual(true);
        navigate("/combinations");
        
    }  catch(err) {
