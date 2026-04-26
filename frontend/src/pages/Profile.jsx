@@ -159,7 +159,7 @@ export default function Profile() {
   const safeName = useMemo(() => {
 
     if(localUser?.is_manual) {
-      return '${localUser.firstName} ${localUser.lastName}';
+      `${localUser.firstName} ${localUser.lastName}`;
     }
     
     
