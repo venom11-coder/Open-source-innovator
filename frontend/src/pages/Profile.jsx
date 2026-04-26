@@ -127,15 +127,25 @@ export default function Profile() {
 
   const handleSignOutClick = () => setShowSignOutConfirm(true);
 
-  const manual_user = localStorage("user");
+  // const manual_user = localStorage("user");
 
   const [searchParams] = useSearchParams();
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+
+  const localdata = localStorage.getItem("user");
+  const localUser = localdata ? JSON.parse(localdata) : null;
+  const is_manual = localdata?.is_manual;
+
+ 
   
   const navigate = useNavigate();
   const { user, loading } = useAuthUser();
 
   const [signingOut, setSigningOut] = useState(false);
+
+  const safeEmail = is_manual ? localdata?.email : (user?.email || "");
+
+  const photo = user?.photo;
 
   const initialMode = searchParams.get("view") === "details" ? "details" : "menu";
   const [mode, setMode] = useState(initialMode); // menu | details
@@ -147,12 +157,15 @@ export default function Profile() {
 
 
   const safeName = useMemo(() => {
-    if (!user) return "";
-    return user.displayName || user.email || "User";
-  }, [user]);
 
-  const safeEmail = user?.email || "";
-  const photo = user?.photoURL || "";
+    if(localUser?.is_manual) {
+      return '${localUser.firstName} ${localUser.lastName}';
+    }
+    
+    
+
+return user?.displayName || user?.email || "Innovator";
+}, [user, localUser]);
 
 const confirmSignOut = async () => {
     setShowSignOutConfirm(false);
